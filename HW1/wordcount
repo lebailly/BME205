@@ -1,0 +1,99 @@
+#!/usr/bin/env python2.7
+
+#File: lebailly/BME205/HW1/wordcount 
+#Author: Chris LeBailly
+
+"""
+wordcount counts the number of "words" (a contiguous sequence of characters from 
+the set  {abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'}) in stdin. 
+Results can be sorted alphabetically (--alpha), by count descending (--descend), 
+by count ascending (--ascend), or reverse alphabetically (--alpha --descend).
+Output to stdout is two-column tab-separated word-count pairs (one pair a line).
+"""
+
+from __future__ import division, print_function
+import sys, argparse, collections, re
+
+def main(args):
+    """
+    Parses command line arguments, reads text from stdin, and prints two-column 
+    tab-separated word-count pairs to stdout in the order specified in the 
+    command line arguments.
+    """
+    
+    #Structure of main follows from code given in assignment.
+
+    options = parse_arguments()
+
+    counts = collections.defaultdict(int)
+    #counts['abc'] is the number of times the word 'abc' occurs in the input. 
+    #defaultdict used to make counts of unseen words be 0.
+    
+    for word in read_word(sys.stdin):
+        counts[word] += 1
+
+    print_output(counts, options)
+
+def parse_arguments():
+    """
+    Parses arguments from comandline to set sort option (--ascend, --descend, 
+    and --alpha).
+    """
+
+    parser = argparse.ArgumentParser(description = __doc__)
+    order = parser.add_mutually_exclusive_group()
+
+    parser.add_argument('--alpha', action='store_true', 
+        help="Sorts words alphabetically.  Sorts by count if not specified.")
+    order.add_argument('--descend', '-d', action='store_true', 
+        help='''Sorts in descending order for both alphabetical and count sorts.
+        If sorting by counts, words with same counts are sorted alphabetically.
+        Sorts in alphabetically descending order if --alpha is also specified.''')
+    order.add_argument('--ascend', '-a', dest='descend', action='store_false',
+        help='''Sorts in ascending order for both alphabetical and count sorts.
+        If sorting by counts, words with same counts are sorted alphabetically.
+        Sorts in alphabetically ascending order if --alpha is also sepcified.''')
+
+    return parser.parse_args()
+
+def read_word(source):
+    """ Generator function which reads one "word" at a time from 'source'. """
+
+    #Separators is a regular expression for characters not found in a word
+    separators = re.compile('[^a-zA-Z\']')
+
+    for line in source:
+        for word in separators.split(line):
+            if(word != ''): 
+                yield word   
+
+def print_output(counts, options):
+    """
+    Sorts 'counts' based on 'options' and prints result to stdout.
+    """
+
+    #Orders words alphabetically in ascending order
+    if options.descend == False and options.alpha == True: 
+        sorted_count = sorted(counts.items())
+
+    #Orders words alphabetically in descending order
+    elif options.descend == True and options.alpha == True:
+        sorted_count = sorted(counts.items(), reverse = True)
+
+    #Orders words by count in ascending order
+    elif options.descend == False and options.alpha == False:
+        sorted_count = sorted(counts.items(), key=lambda x:(x[1],x[0]))
+
+    #Orders words by count in descending order
+    else: sorted_count = sorted(counts.items(), key=lambda x:(-x[1],x[0]))
+    
+    #Prints sorted_count to stdout
+    for word, frequency in sorted_count:
+        print("{}\t{}".format(word,frequency))
+
+    #Sends warning to stderr if no "words" are found in stdin
+    if len(counts) == 0:
+        sys.stderr.write("WARNING: No words found in stdin.\n")
+
+if __name__ == "__main__" :
+    sys.exit(main(sys.argv))

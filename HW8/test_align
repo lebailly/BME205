@@ -1,0 +1,86 @@
+#!/usr/bin/env python2.7
+
+#File: lebailly/BME205/HW8/test_align
+#Author: Chris LeBailly
+
+"""
+test_align computes multiple alignments.  The first sequence read from stdin
+(in fasta format) is used as a master sequence. Remainging sequences in stdin 
+are aligned to the master sequence. Output to stdout is in A2M format.  Scores
+for each aligned sequence is written to stderr.
+"""
+
+from __future__ import division, print_function
+import sys, argparse, re, align, urllib2, imp
+parse = imp.load_source('parse','../parse.py')
+
+def main():
+	"""
+	Parses options from the comand line. Creates either a global or local
+	aligner, depending on options.  Reads fasta sequences from stdin.  The first 
+	sequence is used as a master sequence.  Remainging sequences read in are 
+	aligned to the master sequence.  Output to stdout is in A2M format.  Scores 
+	are outputed to stderr.
+	"""
+
+	options = parse_arguments()
+	subst, alphabet = parse.subst(options.subst_matrix)
+
+	if(options.align == 'local' or options.align == 'l'):
+		aligner = align.local_aligner(subst, open=options.open, 
+				extend=options.extend, double=options.double_gap)
+	else:
+		aligner = align.global_aligner(subst, open=options.open, 
+				extend=options.extend, double=options.double_gap)
+
+	master = None
+	for name, com, seq in parse.fasta(sys.stdin, alphabet):
+		if(master is None):
+			master = seq
+			master_name = name
+		else:
+			score = aligner.align(master, seq)
+			seq = aligner.traceback_col_seq()
+			sys.stderr.write("Score of {} (aligned to {}) is {}\n".
+				format(name,master_name,score))
+
+		print('>'+name,com)
+		print(seq)
+
+def parse_arguments():
+	""" Parses arguments from the command line """
+
+	parser = argparse.ArgumentParser(description = __doc__)
+
+	#Gap costs
+	parser.add_argument('--open', '-o', type=int, default=12,
+			help = 'Gap opening penalty. Default is 12.')
+	parser.add_argument('--extend', '-e', type=int, default=1,
+			help = 'Gap extension penalty. Default is 1.')
+	parser.add_argument('--double_gap', '-d', type=int, default=3,
+			help = '''Penalty for moving from gap in one sequence to gap in the 
+			other sequence. Default is 3.''')
+
+	#Aligments
+	parser.add_argument('--align', '-a', help='''To preform a local alignment 
+		set align equal to 'local' or 'l'.  To preform a global alignment set 
+		align eqaul to 'global' or 'g'.  Global aligment is default.''')
+
+	parser.add_argument('--subst_matrix', '-s', type=file_or_URL,
+			default='http://users.soe.ucsc.edu/~karplus/bme205/f13/BLOSUM62',
+			nargs='?', help = '''Specifies the file or URL to read the 
+			substitution matrix from (integer values in BLOSUM format). Anything
+			staring with 'http://' is considered a URL, otherwise it is
+			considered a file. Defaults to
+			http://users.soe.ucsc.edu/~karplus/bme205/f13/BLOSUM62''')
+
+	return parser.parse_args()
+
+def file_or_URL(name):
+	""" A type used by argparse to specifiy either a file or a URL. """
+
+	return urllib2.urlopen(urllib2.Request(name)) if name.startswith(
+		'http://') else open(name,'r')
+
+if __name__ == "__main__" :
+    sys.exit(main())

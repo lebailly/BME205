@@ -1,0 +1,140 @@
+outline.txt
+
+**********************************************************
+def find_longest_orf(seq): NOT WORKING
+    """
+    Pre-condition: 'seq' is a string using the alphabet "ACGT"
+    Post-condition: The length of the longest ORF in all reading frames.
+    """
+
+    longest_orf = 0
+
+    list_of_starts, list_of_stops = [], []
+
+    for index in xrange(0,len(seq)):
+        codon = seq[index:index+3]
+
+        if(codon == 'ATG'):
+            list_of_starts.append(index)
+        elif(codon == 'TAG' or codon == 'TGA' or codon == 'TAA'):
+            list_of_stops.append(index)
+
+    print(list_of_starts)
+    print(list_of_stops)
+
+    for start, stop in itertools.product(list_of_starts, list_of_stops):
+        length = stop - start
+        if(length % 3 == 0 and length > longest_orf):
+            longest_orf = stop - start
+            print('Start, stop = ', start, stop)
+
+    return longest_orf/3
+    
+def find_longest_orf(seq):
+    """
+    Pre-condition: 'seq' is a string using the alphabet "ACGT"
+    Post-condition: The length of the longest ORF in all reading frames.
+    """
+
+    orf_lengths = [0]
+
+    for frame in xrange(3):
+        protein_seq_list = []
+
+        for index in xrange(frame,len(seq),3):
+            codon = seq[index:index+3]
+            protein_seq_list.append(codon_to_AA(codon))
+
+        protein_seq = ''.join(protein_seq_list)
+        
+        for item in protein_seq.split('*'): #ATTEN: Rename item AND x
+            x = item.split('M', 1)
+
+            if(len(x) == 2): orf_lengths.append(len(x[1]))
+
+    return max(orf_lengths)
+
+**********************************************************
+
+def debug(counts, method=2, min=0, max=1000):
+
+    if(method == 1):
+        codon_rand_counts = collections.Counter()
+
+        totals = int(sum(counts.values())) #ATTEN: DEBUG
+        rand_codon = RandomCodonGenerator(counts)
+        for i in range(totals):
+            codon_rand_counts[rand_codon()] += 1
+
+        for codon, rand_freq in codon_rand_counts.items():
+            actual_freq = counts[codon]
+            percent_err = abs(actual_freq - rand_freq)/actual_freq*100
+            print("{:<5}{:<10}{:<10}{:>10.3f}%"
+                .format(codon, rand_freq, actual_freq, percent_err))
+
+    if(method == 2):
+        orf_lengths = [30,15]
+        orf_list = []
+        gene = ['T']
+
+        for length in orf_lengths:
+            for orf in gen_orf_ranonmly(counts, 1, length):
+                orf_list.append(orf)
+
+        for i in orf_lengths:
+            index = random.randint(0,len(orf_list)-1)
+            gene.append(orf_list.pop(index))
+            gene.append("TAG")
+
+        print(gene)
+        orf_len = find_longest_orf(''.join(gene))
+
+        actual = orf_lengths
+        print("Actual=",actual,"Computed=", orf_len)
+
+******************************************************************
+
+def find_longest_orf(seq):
+    """
+    Pre-condition: 'seq' is a string using the alphabet "ACGU"
+    Post-condition: The length of the longest ORF in all reading frames.
+    """
+
+    #'start_codons' is a list of start codons (in every frame)
+    #'stop_codons' is a list of stop codons (in every frame)
+
+    start_codons = []
+    stop_codons = []
+
+#   print(seq) #ATTEN/DEBUG
+    for index in xrange(len(seq) - 2):
+        codon = seq[index:index+3]
+#       print(codon, index) #ATTEN/DEBUG
+        if(codon == 'ATG'):
+            start_codons.append(index)
+        elif(codon == 'TAG' or codon == 'TGA' or codon == 'TAA'):
+            stop_codons.append(index)
+
+    #Lengths of orf's in each reading frame are recorded here.
+    #List includes zero incase no ORFs are found
+    orf_lengths = [0]
+
+    for frame in xrange(3):
+        starts_in_frame = [x for x in start_codons if x % 3 == frame]
+        stops_in_frame = [x for x in stop_codons if x % 3 == frame]
+
+       #print("Frame =", frame, "Starts =", starts_in_frame, "Stops =", stops_in_frame)
+       # ATTEN/DEBUG
+
+        if(len(stops_in_frame) != 0): stop = max(stops_in_frame)
+        else: stop = len(seq)
+
+        if(len(starts_in_frame) != 0):
+            start = min(starts_in_frame)
+            if(start > stop): stop = len(seq) #No stop codon after start
+
+            orf_lengths.append(stop-start)
+
+#   print(orf_lengths) #ATTEN/DEBUG
+
+    return max(orf_lengths)//3

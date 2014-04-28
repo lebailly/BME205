@@ -1,0 +1,125 @@
+#!/usr/bin/env python2.7
+
+from __future__ import print_function, division
+import sys, collections, re, string, gzip
+
+def main():
+
+	global counts1, total1, counts3, total3
+
+	source = gzip.open(sys.argv[1], 'r')
+	print("Reading from {}".format(source.filename))
+	counts1 = count_kmers(source, 0)
+	total1 = sum(counts1.values())
+	source.close()
+
+	source = gzip.open(sys.argv[1], 'r')
+	counts3 = count_kmers(source, 2)
+	total3 = sum(counts3.values())
+	source.close()
+	
+
+	#Model 1
+	P_Start_1 = P('A')*P('G')*P('T')
+	P_Stop_1 = P('T')*P('A')*P('A') + P('T')*P('A')*P('G') + P('T')*P('G')*P('A')
+
+	E_Long_ORF_1 = P_Start_1*(1-P_Stop_1)**387*total1
+
+	#Model 2
+	P_Start_3 = P('ATG')
+	P_Stop_3 = P('TAA') + P('TAG') + P('TGA')
+
+	E_Long_ORF_3 = P_Start_3*(1-P_Stop_3)**387*total3
+
+	print("The double-stranded genome contains {} bases, and {} 3-mers."
+		.format(total1,total3))
+	print("The probability of G+C is {}".format(P('G')+P('C')))
+	print("The probability of ATG is {} based on GC content, {} based on direct count"
+		.format(P_Start_1, P_Start_3))
+	print('''The probability of a stop codon is {} based on GC content, {} based on direct count'''.format(P_Stop_1, P_Stop_3))
+	print("Expected number of 388 or longer ORFs based on GC frequency is {}"
+		.format(E_Long_ORF_1))
+	print("Expected number of 388 or longer ORFs based on 3-mer frequency is {}"
+		.format(E_Long_ORF_3))
+	
+
+def P(letter):
+	if(len(letter) == 1):
+		return counts1[letter]/total1
+	elif(len(letter) == 3):
+		return counts3[letter]/total3
+
+def count_kmers(source, order = 0, alpha = 'ACGT'):
+	counts = collections.Counter()
+
+	for (fasta_id, comment, seq) in read_fasta(source, alpha):
+
+		for start in xrange(len(seq)-order):
+			counts[seq[start:start+order+1]] += 1
+			counts[reverse_comp(seq[start:start+order+1])] += 1
+
+	return counts
+
+# define reverse complement
+complement_table = string.maketrans("ACGT", "TGCA")
+def reverse_comp(dna):
+    """
+    Returns a string with the reverse-complement of the DNA string "dna".
+    Assumes that all bases in DNA are canonical (ACGT).
+    To generalize to wildcard bases, complement_table would need
+    to be redefined.
+    """
+
+    return dna[::-1].translate(complement_table)
+
+def read_fasta(source, alpha):
+    """
+    'source' is a fasta file-like object. 'chars_not_in_seq' is a string (for 
+    use in a regex) of characters outside desired sequence alphabet.
+
+    generator function yields (name, comment, sequence), where all three are 
+    strings with no line breaks.
+
+    Warning given empty sequences, nameless sequences, and sequence characters
+    outside of desired alphabet.  These characters are removed from output.
+    """
+
+    #'ID' is the sequence ID (starts with None when nothing has been read).
+    #'seq' is a list containing strings of the sequence.
+    #'comment' is a list containing string of the comment(s).
+    #separators is a regex for what divides the ID and any comments.
+    #alphabet is a regex for the characters in the alphabet.
+
+    ID, seq, comment = None, [], []
+    separators = re.compile('[, \t\r]')
+    alphabet = re.compile('['+alpha+']')
+
+    for line in source:
+        line = line.rstrip()
+
+        #Start of new sequence
+        if line.startswith('>'):
+
+            if ID: yield (ID, ' '.join(comment), ''.join(seq))
+
+            seq, comment = [], []
+
+            first_line = separators.split(line, maxsplit = 1)
+            ID = first_line[0].lstrip('>')
+            if len(first_line) == 2:
+                comment.append(first_line[1])
+
+        #Adds any semi-colon comments        
+        elif line.startswith(';'):
+            comment.append(line.lstrip(';'))
+
+        #Otherwise line must be part of a sequence    
+        else:
+            line = line.upper()
+            clean_line = re.findall(alphabet,line) #list of characters
+            seq += clean_line
+
+    if ID: yield (ID, ' '.join(comment), ''.join(seq))
+
+if __name__ == "__main__" :
+	sys.exit(main())

@@ -1,0 +1,101 @@
+#!/usr/bin/env python2.7
+
+#File: lebailly/BME205/HW9/optimized_gene
+#Author: Chris LeBailly
+
+"""
+optimized_gene creates an optimized gene given a protein sequence.  It reads
+fasta sequences from stdin.  Sequences must be formated with square brackets 
+around amino acid sets if they contain more than one amnio acid (but not requred
+if the set only contains one amnio acids).  For exmaple, A[AEV][DN] is a valid
+sequence.  Prints fasta gene(s) to stdout.
+"""
+
+from __future__ import division, print_function
+
+import sys, argparse, urllib2, imp
+parse = imp.load_source('parse','../parse.py')
+from degenerate_codons import degenerate_codons
+
+def main():
+	"""
+	Parses command line argumetns, codon frequency table, and genetic code.
+	Computes amino acid sets, their imbalances, and their frequencies.
+	Uses the best_codon method of the degenerate_codons class to find the
+	best degenerate codon which codes each amino acid set.  Prints the
+	resulting gene to stdout in fasta format.
+	"""
+
+	options = parse_arguments()
+	codon_counts = parse.codon_freq_table(options.codon)
+	genetic_code = parse.genetic_code(options.codon_table, options.gene_code)
+
+	dc = degenerate_codons(genetic_code=genetic_code,codon_counts=codon_counts)
+	dc.compute_results()
+
+	for name, com, seq in parse.fasta(source=sys.stdin,
+								alphabet="ACDEFGHIKLMNPQRSTVWYBZX*\[\]"):
+
+		DNA = []
+		seq = seq.replace('B','DN').replace('Z','EQ').replace('X',
+														'ACDEFGHIKLMNPQRSTVWY')
+		
+		#list_of_AAsets is a list of AA sets to translate into optimal codons
+		list_of_AAsets = []
+
+		#AAset is a list of amino acids in a set.  reading_set is True when
+		#brackets are detected (indicating we are reading a set of amnio acids).
+		AAset = []
+		reading_set = False
+
+		for letter in seq:
+			if(letter == '['):
+				reading_set = True
+			elif(letter == ']'):
+				list_of_AAsets.append(''.join(AAset))
+				reading_set = False
+				AAset = []
+			else:
+				if(not reading_set):
+					list_of_AAsets.append(letter)
+				else:
+					AAset.append(letter)
+
+		for AAset in list_of_AAsets:
+			DNA.append(dc.best_codon(AAset))
+		
+		print('>'+name,com)
+		print(''.join(DNA))
+
+def parse_arguments():
+	""" Parses arguments form the command line. """
+
+	parser = argparse.ArgumentParser(description = __doc__)
+
+	parser.add_argument('--codon', '-c', type=URL,
+		default='http://www.kazusa.or.jp/codon/cgi-bin/showcodon.cgi?species=199310&aa=1&style=GCG',
+		help = '''Spcifies a URL for codon preference table.  Must be a style 
+		like CodonFrequency output in GCG Wisconsin Package.  Defaults to the 
+		Escherichia coli CFT073 codon preferences, found at http://www.kazusa.or
+		.jp/codon/cgi-bin/showcodon.cgi?species=199310&aa=1&style=GCG''')
+	parser.add_argument('--codon_table', '-t', type=URL,
+		default='ftp://ftp.ncbi.nih.gov/entrez/misc/data/gc.prt',
+		help= '''Specifies a URL for the genetic code.  It must have the same 
+		format as the default, ftp://ftp.ncbi.nih.gov/entrez/misc/data/gc.prt''')
+	parser.add_argument('--gene_code', '-g', default='Standard',
+		help='''Specifes which genetic code to use.  Must match the full name 
+		of an entry in '--codon_table' (not the secondary nickname).  
+		Default is Standard. ''')
+
+	return parser.parse_args()
+
+def URL(name):
+	"""
+	Pre-condition: name is a string giving a URL.
+	Post-codition: returns a file-like source reading the HTML of name.
+	"""
+
+	return urllib2.urlopen(urllib2.Request(name))
+
+if __name__ == '__main__':
+	sys.exit(main())

@@ -1,0 +1,16 @@
+>fat 
+ISAYGARFIELDISAFATCAT
+>cat  score_a2m = 43 align score = 43
+----GARFIELDwasthelASTFATCAT
+>cat2  score_a2m = 70 align score = 70
+----GARFIELDISAFATCAT
+>cat3  score_a2m = 53 align score = 53
+----GARFIELDISTheFATCAT
+>cat4  score_a2m = 58 align score = 58
+----GARFIELDISAFAsTCAT
+>cat4  score_a2m = 42 align score = 42
+----GARFIELDISTHefaSTCAT
+>cat5  score_a2m = 25 align score = 25
+----GARFIELDIS----FAT
+>say  score_a2m = -15 align score = -15
+-SAY--------------FAT

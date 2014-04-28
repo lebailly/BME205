@@ -1,0 +1,79 @@
+#!/usr/bin/env python2.7
+
+#File: lebailly/BME205/HW6/reverseORF
+#Author: Chris LeBailly
+
+from __future__ import print_function, division
+import sys, argparse, string, imp
+parse = imp.load_source('parse','../parse.py')
+
+def main():
+
+    options = parse_arguments()
+
+    for name, comm, seq in parse.fasta(sys.stdin):
+        proteins = dna_to_aa(seq)
+
+        for frame in options.frames:
+            print('Frame {}:\n{}'.format(frame, proteins[frame]))
+
+    #ORF, frame = find_longest_orf(sequence)
+
+    #print(ORF, '\nFrame  =', frame, '\nLength =', len(ORF))
+
+def parse_arguments():
+    """
+    """
+
+    parser = argparse.ArgumentParser(description = __doc__)
+
+    parser.add_argument('frames', default=[-3,-2,-1,1,2,3],
+        nargs='*', type=int)
+
+    return parser.parse_args()
+
+def dna_to_aa(seq):
+    """
+    """
+
+    protein_dict = {}
+
+    for direction in [1,-1]:
+        if(direction == -1): seq = reverse_comp(seq)
+
+        for frame in xrange(3):
+            protein_seq_list = []
+
+            for index in xrange(frame,len(seq),3):
+                codon = seq[index:index+3]
+                protein_seq_list.append(codon_table.get(codon,''))
+
+            protein_dict[direction*(frame + 1)] = ''.join(protein_seq_list)
+
+    return protein_dict
+
+complement_table = string.maketrans("ACGT", "TGCA")
+def reverse_comp(dna):
+    """
+    Returns a string with the reverse-complement of the DNA string "dna".
+    Assumes that all bases in DNA are canonical (ACGT).
+    To generalize to wildcard bases, complement_table would need
+    to be redefined.
+    """
+
+    return dna[::-1].translate(complement_table)
+
+#Ian F. typed up the codon_table (emailed me to save typing time)
+codon_table = {'TTT':'F','TTC':'F','TTA':'L','TTG':'L','CTT':'L','CTC':'L',
+        'CTA':'L','CTG': 'L', 'ATT':'I','ATC':'I','ATA':'I','ATG':'M','GTT':'V',
+        'GTC':'V','GTA':'V','GTG':'V','TCT': 'S','TCC':'S','TCA':'S','TCG':'S',
+        'CCT':'P','CCC':'P','CCA':'P','CCG':'P','ACT':'T','ACC':'T','ACA':'T',
+        'ACG':'T','GCT':'A','GCC':'A','GCA':'A','GCG':'A','TAT':'Y','TAC':'Y',
+        'TAA':'*','TAG':'*','CAT':'H','CAC':'H','CAA':'Q','CAG':'Q','AAT':'N',
+        'AAC':'N','AAA':'K','AAG':'K','GAT':'D','GAC':'D','GAA':'E','GAG':'E',
+        'TGT':'C','TGC':'C','TGA':'*','TGG':'W','CGT':'R','CGC':'R','CGA':'R',
+        'CGG':'R','AGT':'S','AGC':'S','AGA':'R','AGG':'R','GGT':'G','GGC':'G',
+        'GGA':'G','GGG':'G'}
+
+if __name__ == "__main__" :
+    sys.exit(main())

@@ -1,0 +1,78 @@
+#!/usr/bin/env python2.7
+
+#File: lebailly/BME205/HW9/degenerate
+#Author: Chris LeBailly
+
+"""
+degenerate computes all possible amino acid sets that degenerate codons can code
+for.  For each amino acid set, the imbalance of each degenerate codon is computed
+as it the average frequency of the degenerate codon.  Results are printed to 
+stdout, and different output options are available. 
+"""
+
+from __future__ import division, print_function
+
+import sys, argparse, urllib2, imp
+parse = imp.load_source('parse','../parse.py')
+from degenerate_codons import degenerate_codons
+
+def main():
+	"""
+	Parses arguments from the comand line, parses the codon frequency table and
+	parses the genetic code.  Uses this to construct a degenerate_codons class.
+	Runs compute_results method then output is sent to stdout.  Output can be 
+	one of four formats: 'minimal', 'min-codons', 'all-codons', or 'full' 
+	(set in command line options).
+	"""
+
+	options = parse_arguments()
+	codon_counts = parse.codon_freq_table(options.codon)
+	genetic_code = parse.genetic_code(options.codon_table, options.gene_code)
+
+	dc = degenerate_codons(genetic_code=genetic_code,codon_counts=codon_counts)
+	dc.compute_results()
+	dc.output(options.output_format)
+
+def parse_arguments():
+	""" Parses arguments form the command line. """
+
+	parser = argparse.ArgumentParser(description = __doc__)
+
+	parser.add_argument('--output_format', '-o', default='minimal',
+		help = '''Specifies one of the follow output formats. 'min-codons' prints
+		the amino acid set, the minimal imbalance, and all codons with minimal 
+		imbalance (tab-separated). 'all-codons' is the same, except all-codons 
+		are printed (not just the ones with minimal imbalance).'full' prints the 
+		amino acid set, followed by a list of all codons with the imbalance and 
+		frequency reported. In these formats codons are printed in order of 
+		lowest imbalance, then by highest frequency. 'minimal' prints the amino 
+		acid set, the minimal imbalance, and the codon with the minimal 
+		imbalance and maximal frequency. 'minimal' is default.''')
+
+	parser.add_argument('--codon', '-c', type=URL,
+		default='http://www.kazusa.or.jp/codon/cgi-bin/showcodon.cgi?species=199310&aa=1&style=GCG',
+		help = '''Spcifies a URL for codon preference table.  Must be a style 
+		like CodonFrequency output in GCG Wisconsin Package.  Defaults to the 
+		Escherichia coli CFT073 codon preferences, found at http://www.kazusa.or
+		.jp/codon/cgi-bin/showcodon.cgi?species=199310&aa=1&style=GCG''')
+	parser.add_argument('--codon_table', '-t', type=URL,
+		default='ftp://ftp.ncbi.nih.gov/entrez/misc/data/gc.prt',
+		help= '''Specifies a URL for the genetic code.  It must have the same 
+		format as the default, ftp://ftp.ncbi.nih.gov/entrez/misc/data/gc.prt''')
+	parser.add_argument('--gene_code', '-g', default='Standard',
+		help='''Specifes which genetic code to use.  Must match the full name 
+		of an entry in '--codon_table' (not the secondary nickname).  
+		Default is Standard. ''')
+
+	return parser.parse_args()
+
+def URL(name):
+	"""
+	Pre-condition: name is a string giving a URL.
+	Post-codition: returns a file-like source reading the HTML of name.
+	"""
+
+	return urllib2.urlopen(urllib2.Request(name))
+
+if __name__ == '__main__':
+	sys.exit(main())

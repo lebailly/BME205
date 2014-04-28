@@ -1,0 +1,184 @@
+
+
+*******************************************************************************
+Fri Nov  8 10:58:30 2013
+
+
+FIT:    data read from 'Model3.txt' using 1:(log($4))
+        format = x:z
+        #datapoints = 215
+        residuals are weighted equally (unit weight)
+
+function used for fitting: log(gumbel_P(x,m,beta))
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 12.9774           delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 0.0803948
+
+initial set of free parameter values
+
+m               = 50
+beta            = 30
+
+After 3 iterations the fit converged.
+final sum of squares of residuals : 1.82654
+rel. change during last iteration : -1.42402e-06
+
+degrees of freedom    (FIT_NDF)                        : 213
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.0926029
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.0085753
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+m               = 55.03            +/- 0.3946       (0.7171%)
+beta            = 27.1187          +/- 0.0959       (0.3536%)
+
+
+correlation matrix of the fit parameters:
+
+               m      beta   
+m               1.000 
+beta           -0.861  1.000 
+
+
+*******************************************************************************
+Fri Nov  8 10:58:42 2013
+
+
+FIT:    data read from 'Model3.txt' using 1:(log($4))
+        format = x:z
+        #datapoints = 215
+        residuals are weighted equally (unit weight)
+
+function used for fitting: log(lognormal_P(x,mu,sigma))
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 20.8459           delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 7.59682
+
+initial set of free parameter values
+
+mu              = 4
+sigma           = 0.5
+
+After 3 iterations the fit converged.
+final sum of squares of residuals : 0.957565
+rel. change during last iteration : -7.31454e-06
+
+degrees of freedom    (FIT_NDF)                        : 213
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.0670493
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.00449561
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+mu              = 4.21838          +/- 0.002957     (0.0701%)
+sigma           = 0.414364         +/- 0.001224     (0.2955%)
+
+
+correlation matrix of the fit parameters:
+
+               mu     sigma  
+mu              1.000 
+sigma          -0.949  1.000 
+
+
+*******************************************************************************
+Fri Nov  8 10:59:03 2013
+
+
+FIT:    data read from 'Model3.txt' using 1:(log($4))
+        format = x:z
+        #datapoints = 215
+        residuals are weighted equally (unit weight)
+
+function used for fitting: log(gumbel_P(x,m,beta))
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 12.9774           delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 0.0803948
+
+initial set of free parameter values
+
+m               = 50
+beta            = 30
+
+After 3 iterations the fit converged.
+final sum of squares of residuals : 1.82654
+rel. change during last iteration : -1.42402e-06
+
+degrees of freedom    (FIT_NDF)                        : 213
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.0926029
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.0085753
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+m               = 55.03            +/- 0.3946       (0.7171%)
+beta            = 27.1187          +/- 0.0959       (0.3536%)
+
+
+correlation matrix of the fit parameters:
+
+               m      beta   
+m               1.000 
+beta           -0.861  1.000 
+
+
+*******************************************************************************
+Fri Nov  8 11:01:17 2013
+
+
+FIT:    data read from 'Model3.txt' using 1:(log($4))
+        format = x:z
+        #datapoints = 215
+        residuals are weighted equally (unit weight)
+
+function used for fitting: log(lognormal_P(x,mu,sigma))
+fitted parameters initialized with current variable values
+
+
+
+ Iteration 0
+ WSSR        : 20.8459           delta(WSSR)/WSSR   : 0
+ delta(WSSR) : 0                 limit for stopping : 1e-05
+ lambda	  : 7.59682
+
+initial set of free parameter values
+
+mu              = 4
+sigma           = 0.5
+
+After 3 iterations the fit converged.
+final sum of squares of residuals : 0.957565
+rel. change during last iteration : -7.31454e-06
+
+degrees of freedom    (FIT_NDF)                        : 213
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.0670493
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.00449561
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+
+mu              = 4.21838          +/- 0.002957     (0.0701%)
+sigma           = 0.414364         +/- 0.001224     (0.2955%)
+
+
+correlation matrix of the fit parameters:
+
+               mu     sigma  
+mu              1.000 
+sigma          -0.949  1.000 

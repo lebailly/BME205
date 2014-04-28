@@ -1,0 +1,7 @@
+Reading from S.solfataricus.fa.gz
+The double-stranded genome contains 5984490 bases, and 5984486 3-mers.
+The probability of G+C is 0.35787176518
+The probability of ATG is 0.0184450986188 based on GC content, 0.0156706858367 based on direct count
+The probability of a stop codon is 0.069986182363 based on GC content, 0.0704835803777 based on direct count
+Expected number of 388 or longer ORFs based on GC frequency is 7.0519034485e-08
+Expected number of 388 or longer ORFs based on 3-mer frequency is 4.87078931926e-08

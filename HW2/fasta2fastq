@@ -1,0 +1,83 @@
+#!/usr/bin/env python2.7
+
+#File: lebailly/BME205/HW2/fasta2fastq
+#Author: Chris LeBailly
+
+"""
+fasta2fastq convers a fasta file (--in) and a quality file (--qual) with white 
+space separated Phred values to a fastq file (--out).  User sepcifies either 
+Phred+33 (--33) or Phred+64 (--64).  User has the option to sepcify sequence 
+alphabet.  Default is 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', but can also use nucleic 
+alphabet 'ACGTURYKMSWBDHVNX-' or protein alphabet 'ABCDEFGHIKLMNPQRSTUVWXY*-'.
+
+If input contains no sequences warning sent to stderr.
+"""
+
+from __future__ import division, print_function
+import sys, argparse, imp
+parse = imp.load_source('parse','../parse.py')
+
+def main():
+    """ 
+    Parses arguments, reads fasta and quality information, then prints the 
+    sequence.  Gives warning if input has no sequences.
+    """
+
+    args = parse_arguments()
+    num_seqs = 0
+
+    for name, seq, commments, qual in parse.fasta_with_quality(args.input, 
+        args.qual, args.phred, args.alpha):
+        
+        print_fastq(output = args.output, name = name, seq = seq, 
+            comm = commments, qual = qual, phred = args.phred)
+
+        num_seqs += 1
+
+    if(num_seqs == 0):
+        print("WARNING: Input contains no sequences.", file=sys.stderr)
+
+def print_fastq(output, phred, name, seq, comm, qual):
+    """ Prints fastq sequence to output, with phred quality. """
+    #ATTEN - DOCUMENT OTHER VARS.
+    
+    if comm: print("@{} {}\n{}\n+".format(name, comm, seq), file=output)
+    else: print("@{}\n{}\n+".format(name, seq), file=output)
+
+    print(''.join(str(chr(x+phred)) for x in qual), file=output)
+
+def parse_arguments():
+    """ Parses arguments from comandline. """
+
+    parser = argparse.ArgumentParser(description = __doc__)
+    phred = parser.add_mutually_exclusive_group()
+    alpha = parser.add_mutually_exclusive_group()
+
+    #Input/output files
+    parser.add_argument('--in', dest='input', nargs='?', 
+        type=argparse.FileType('r'), default=sys.stdin, 
+        help ="Specifies input sequence file")
+    parser.add_argument('--out', dest='output', nargs='?', 
+        type=argparse.FileType('w'), default=sys.stdout, 
+        help ="Specifies output sequence file")
+    parser.add_argument('--qual', nargs='?', type=argparse.FileType('r'),
+        help="Specifcs quality input file")
+
+    #Phred value
+    phred.add_argument('--33', dest='phred', action='store_const', const=33, 
+        default=33, help="Reads quality with Phred+33 (default)")
+    phred.add_argument('--64', dest='phred', action='store_const', const=64, 
+        help="Reads quality with Phred+64 ")
+
+    #Sequence alphabet
+    alpha.add_argument('--alpha', '-a', default='ABCDEFGHIJKLMNOPQRSTUVWXYZ', 
+        help="A string of letters in sequence alphabet (default is 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')")
+    alpha.add_argument('--nucleic', dest='alpha', action='store_const',
+        const='ACGTURYKMSWBDHVNX-', help="Sepcifies nucleic alphabet, 'ACGTURYKMSWBDHVNX-' ")
+    alpha.add_argument('--protein', dest='alpha', action='store_const',
+        const='ABCDEFGHIKLMNPQRSTUVWXY*-', help="Specifies protein alphabet")
+
+    return parser.parse_args()
+
+if __name__ == "__main__" :
+    sys.exit(main())

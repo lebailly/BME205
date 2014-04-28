@@ -1,0 +1,120 @@
+#!/usr/bin/env python2.7
+
+#File: lebailly/BME205/HW4/count-kmers
+#Author: Chris LeBailly
+
+"""
+count-kmers takes a fasta file from stdin and counts the k-mers (where k = 
+order + 1 and order is specified in the command line). Output to stdout is two 
+tokens on each line: the k-mer followed by the count of that k-mer, 
+tab-separated.  User has options to sort output alphabetically or by count 
+(with ties broken alphabetically).  Both sorts can also be reversed.
+"""
+
+from __future__ import division, print_function
+import sys, argparse, string
+from Markov import get_counts
+
+def main(args):
+    """
+    Parses arguments ('options'), counts k-mers (k = options.order + 1) and 
+    outputs two tokens on each line: the k-mer followed by the count of that 
+    k-mer, tab-separated, to stdout. Output can be sorted alphabetically or by 
+    counts specified in the command line arguments.
+    """
+
+    options = parse_arguments()
+
+    error_check(options)
+
+    #'counts' has k-mers for keys and counts as values
+    counts = get_counts(sys.stdin, options.order, options.alphabet, 
+        options.start_char, options.stop_char) 
+
+    print_table(counts, options)
+
+def parse_arguments():
+    """ Parses arguments from command line. """
+
+    parser = argparse.ArgumentParser(description = __doc__)
+    sort = parser.add_mutually_exclusive_group()
+
+    #Model information
+    parser.add_argument('--order', '-o', action='store', type=non_neg_int, 
+        default=0, metavar='', help='''Order-n counts (n+1)-kmers. Order must 
+        be non-negative integer (defaults to 0).''')
+
+    #Alphabet information
+    parser.add_argument('--alphabet', '-a', action='store', 
+        default='ABCDEFGHIJKLMNOPQRSTUVWXYZ',metavar='', 
+        help='''Specifies the alphabet to be used 
+        (defaults to \'ABCDEFGHIJKLMNOPQRSTUVWXYZ\').''')
+    parser.add_argument('--start_char', action='store', default='^', metavar='',
+        help='Specifies start character (defaults to \'^\').')
+    parser.add_argument('--stop_char', action='store', default='$', metavar='',
+        help='Specifies start character (defaults to \'$\').')
+
+    #Output format
+    sort.add_argument('--sort_alpha', action='store_true', 
+        help="Sorts k-mers alphabetically (default unsorted).")
+    sort.add_argument('--sort_count', action='store_true', 
+        help="Sorts k-mers by count, then alphabetically (default unsorted).")
+    parser.add_argument('--reverse_sort', action='store_true',
+        help = '''For --sort_alpha, sorts in reverse alphabetical order. 
+        For --sort_count, sorts by counts descending, then alphabetically. 
+        Does nothing if no sort specified.''')
+
+    return parser.parse_args()
+
+def print_table(counts, options):
+    """
+    Counts is a dictionary with k-mer keywords and count values.  Sorts either
+    alphabetically or by count if specified in options (from argparse).  Prints 
+    two tokens per line: the k-mer and its count, tab-separated, to stdout. 
+    """
+
+    if(options.sort_alpha == False and options.sort_count == False):
+        counts_to_print = counts.items()
+    elif(options.sort_alpha == True):
+        counts_to_print = sorted(counts.items(), reverse = options.reverse_sort)
+    elif(options.sort_count == True and options.reverse_sort == False):
+        counts_to_print = sorted(counts.items(), key=lambda x:(x[1],x[0]))
+    elif(options.sort_count == True and options.reverse_sort == True):
+        counts_to_print = sorted(counts.items(), key=lambda x:(-x[1],x[0]))
+
+    for kmer, freq in counts_to_print:
+        print("{}\t{}".format(kmer,freq))   
+
+def error_check(options):
+    """ 
+    Checks if options.start_char or options.stop_char is in options.alphabet and
+    raises an Exception if either is contained in the alphabet.
+
+    Checks if any letters in options.alphabet are not in string.printable or are 
+    in string.whitespace.  Raises an Exception if either is true.
+    """
+
+    if(options.start_char in options.alphabet):
+        raise Exception("Start character is contained in the alphabet!")
+
+    if(options.stop_char in options.alphabet):
+        raise Exception("Stop character is contained in the alphabet!")
+
+    for letter in options.alphabet:
+        if(letter not in string.printable):
+            raise Exception("Alphabet contains non-printable character!")
+        if(letter in string.whitespace):
+            raise Exception("Alphabet contains whitespace character!")
+
+#http://stackoverflow.com/questions/14117415/using-argparse-allow-only-positive-integers/14117567#14117567
+def non_neg_int(value):
+    """ Argparse function to make sure 'value' is a non-negative integer """
+
+    ivalue = int(value) #casts value as int type
+    if ivalue < 0:
+         raise argparse.ArgumentTypeError(
+            "{} is an invalid positive int".format(value))
+    return ivalue
+
+if __name__ == "__main__" :
+    sys.exit(main(sys.argv))

@@ -1,0 +1,86 @@
+#!/usr/bin/env python2.7
+
+"""
+score reades sequences in a2m format from stdin and computes the score of the 
+first (master) sequence aligned to the subsecent sequences.  Either local or 
+global scores can be computed (specified in options), using .score_a2m method in 
+align module. Output to stdout is the original a2m sequences.  Scores are
+output to stderr.
+"""
+
+from __future__ import division, print_function
+import sys, argparse, itertools, align, urllib2, imp
+parse = imp.load_source('parse','../parse.py')
+
+def main():
+	"""
+	Parses arguments from the comand line, parses the substituion matrix,
+	creates either a local or global aligner (depending on the options), then
+	reads a2m sequences from stdin and computes the score of the first sequence
+	aligned to subsequent sequences.  The sequences are echoed to stdout, while
+	the scores computed are output to stderr.
+	"""
+
+	options = parse_arguments()
+	subst, alpha = parse.subst(options.subst_matrix)
+	alpha += '-'
+	options.subst_matrix.close()
+
+	if(options.align == 'local'): 
+		aligner = align.local_aligner(subst, open=options.open,
+			extend=options.extend, double=options.double_gap)
+	else: 
+		aligner = align.global_aligner(subst, open=options.open,
+			extend=options.extend, double=options.double_gap)
+
+	master_seq = None
+	for name,com,seq in parse.fasta(sys.stdin,alphabet=alpha,case_senitive=True):
+		if(not master_seq):
+			master_seq = seq
+			master_name = name
+		else:
+			print("{}_aligner.score_a2m({},{}) = {}".format(options.align,name,
+				master_name, aligner.score_a2m(master_seq,seq)), file=sys.stderr)
+
+		print('>{name} {com}\n{seq}'.format(name=name,com=com,seq=seq))
+
+def parse_arguments():
+	""" Parses arguments from the command line """
+
+	parser = argparse.ArgumentParser(description = __doc__)
+
+	#Gap costs
+	parser.add_argument('--open', '-o', type=int, default=12,
+			help = 'Gap opening penalty. Default is 12.')
+	parser.add_argument('--extend', '-e', type=int, default=1,
+			help = 'Gap extension penalty. Default is 1.')
+	parser.add_argument('--double_gap', '-d', type=int, default=3,
+			help = '''Penalty for moving from gap in one sequence to gap in the 
+			other sequence. Default is 3.''')
+
+	#Aligments
+	parser.add_argument('--align', '-a', help='''To score a local alignment 
+			set align equal to 'local' or 'l'.  Otherwise aligmented is 
+			scored as a global aligmen.''')
+	parser.add_argument('--subst_matrix', '-s', type=file_or_URL,
+			default='http://users.soe.ucsc.edu/~karplus/bme205/f13/BLOSUM62',
+			nargs='?', help = '''Specifies the file or URL to read the 
+			substitution matrix from (integer values in BLOSUM format). Anything
+			staring with 'http://' is considered a URL, otherwise it is
+			considered a file. Defaults to
+			http://users.soe.ucsc.edu/~karplus/bme205/f13/BLOSUM62''')
+
+	options = parser.parse_args()
+	if(options.align == 'l' or options.align == 'local'): options.align = 'local'
+	else: options.align = 'global'
+
+	return options
+
+def file_or_URL(name):
+	""" A type used by argparse to specifiy either a file or a URL. """
+
+	return urllib2.urlopen(urllib2.Request(name)) if name.startswith(
+		'http://') else open(name,'r')
+
+if __name__ == "__main__" :
+    sys.exit(main())

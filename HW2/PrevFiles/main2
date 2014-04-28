@@ -1,0 +1,26 @@
+#!/usr/bin/env python2.7
+
+#File: lebailly/BME205/main2
+#Author: Chris LeBailly
+
+"""
+main
+"""
+
+from __future__ import division, print_function
+import sys, argparse, reader
+
+fasta_source = open('tiny.fasta','r')
+qual_source = open('tiny.qual','r')
+
+def main(args):
+#	for name, seq, comment, qual in reader.read_fasta_with_quality(fasta_source, qual_source):
+#		print(len(seq), len(qual),"\n")
+    
+    for name, comment, seq in reader.read_fasta(fasta_source):
+        print(len(seq))
+
+    fasta_source.close()
+    qual_source.close()
+if __name__ == "__main__" :
+    sys.exit(main(sys.argv))

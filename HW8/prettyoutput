@@ -1,0 +1,128 @@
+#!/usr/bin/env python2.7
+
+#File: lebailly/BME205/HW8/test_align
+#Author: Chris LeBailly
+
+"""
+prettyoutput reades sequences in A2M format.  The first sequence is the master 
+seuqnece.  Subsequence sequences are paired with the master sequence.  These
+pairs are printed to stdout as '>name seq' on consecutive lines.  Characters
+that align vertically are aligned in the A2M input (with '-' representing gaps).
+If sequences are longer than --width (default 100), then multiple blocks are
+printed.  If A2M aligments are local aligments, specifiy --align=local to remove
+leading and traing gaps.  It is possible to have non-matching characters outputed
+as lower case letters (--match_case).  It also possible to count the number of
+mathcing characters and the number of gaps (--gap_counts), with the results
+being outputed in stderr.
+"""
+
+from __future__ import division, print_function
+import sys, argparse, re, align, imp
+parse = imp.load_source('parse','../parse.py')
+
+def main():
+    """
+    parses arguments from the command line, reads A2M sequences from stdin.
+    First sequence is set to the master sequence.  Subsequent sequences are
+    printed with the master sequence.  Can also make non-matching characters
+    lower case and also print number of aligning characters, depending on
+    comand line options specified.
+    """
+
+    options = parse_arguments()
+
+    master_seq = None
+    for name, com, seq in parse.fasta(sys.stdin,alphabet=
+                             "ARNDCQEGHILKMFPSTWYVBZX*-", case_senitive=True):
+        if(not master_seq):
+            master_seq = seq
+            master_name = name
+        else:
+            master_fasta_list, seq_fasta_list = align.a2m_to_fasta(master_seq,seq)
+
+            if(options.align == 'local' or options.align == 'l'): 
+                align.extract_local(master_fasta_list,seq_fasta_list)
+
+            if(options.match_case):
+                match(master_fasta_list, master_name, seq_fasta_list, name)
+
+            if(options.gap_counts):
+                output_gap_counts(master_fasta_list, master_name, 
+                        seq_fasta_list, name)
+
+            output_seqs(master_name, master_fasta_list, name, seq_fasta_list, 
+                    options.width)
+
+def output_seqs(master_name, master_fasta_list, name, seq_fasta_list, width):
+    """
+    Print the name of the masters sequence followed by the first 'width'
+    characters of the sequence.  On the next line prints the name of the sequence
+    followed by the first 'width' characters of the seuqence.  This is repeated
+    till all characters of the sequence are outputed.
+    """
+
+    name_len = max(len(master_name), len(name))
+
+    for start in xrange(0,len(master_fasta_list), width):
+        master_slice = ''.join(master_fasta_list[start:start+width])
+        seq_slice = ''.join(seq_fasta_list[start:start+width])
+        
+        print("\n>{0:<{1}} {2}".format(master_name,name_len,master_slice))
+        print(">{0:<{1}} {2}".format(name,name_len,seq_slice))
+    if(start > 0): sys.stdout.write('\n')
+
+def match(master_fasta_list, master_name, seq_fasta_list, name):
+    """
+    If two characters in the aligned sequence are not the same,
+    this function makes them lower case.
+    """
+
+    for index, (master_base, seq_base) in enumerate(
+                            zip(master_fasta_list, seq_fasta_list)):
+
+        if(master_base != seq_base):
+            seq_fasta_list[index] = seq_base.lower()
+            master_fasta_list[index] = master_base.lower()
+
+def output_gap_counts(master_fasta_list, master_name, seq_fasta_list, name):
+    """
+    Counts the number of mathcing characters and number of gaps.
+    Prints results to stderr.
+    """
+
+    num_matches, num_gaps, seq_len = 0, 0, len(seq_fasta_list)
+
+    for index, (master_base, seq_base) in enumerate(
+                            zip(master_fasta_list, seq_fasta_list)):
+
+        if(master_base == '-' or seq_base == '-'): num_gaps += 1
+        elif(master_base == seq_base): num_matches += 1
+
+    print('\nAligining {a} to {b} gives {c}/{d} ({e:.2f}%) matches'
+        .format(a=master_name, b=name, e=100*num_matches/len(seq_fasta_list),
+        c=num_matches, d=len(seq_fasta_list)),
+        '(with {} gaps).'.format(num_gaps),
+        'Ignoring gaps gives {g}/{h} ({i:.2f}%) matches.'
+        .format(g=num_matches,h=seq_len-num_gaps,
+        i=100*num_matches/(seq_len-num_gaps)),file=sys.stderr)
+
+def parse_arguments():
+    """ Parses arguments from the command line """
+
+    parser = argparse.ArgumentParser(description = __doc__)
+
+    parser.add_argument('--align', '-a', help='''Print local alignment 
+        (by removing leading and trailing gaps) if set to 'local' or 'l', 
+        otherwise prints global aligments (no gaps removed).''')
+    parser.add_argument('--width', '-w', default=100, type=int,
+        help='Specifies the width of each sequence (default 100).')
+    parser.add_argument('--match_case', '-m', action='store_true',
+        help='Sets non-matching characters to lower case.')
+    parser.add_argument('--gap_counts', '-g', action='store_true',
+        help='''Counts number of matching characters and number of gaps.
+        Results are printed to stderr.''')
+
+    return parser.parse_args()
+
+if __name__ == "__main__" :
+    sys.exit(main())

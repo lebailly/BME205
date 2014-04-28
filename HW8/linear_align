@@ -1,0 +1,99 @@
+#!/usr/bin/env python2.7
+
+#File: lebailly/BME205/HW8/linear_align
+#Author: Chris LeBailly
+
+"""
+linear_align runs both the local_linear_aligner and local_aligner (which uses
+the affine gap cost).  Given one or more fasta files as positional arguments,
+runs both the linear and affine aligner. Runtimes are recorded for each aligner.
+The filename being read is sent to stdout starting with a # (can be supressed 
+using -f).  Each sequence name is written to stdout with its length as a comment 
+(in FASTA format). Except for the master sequence, all sequence have the runtime 
+ratio as part of in the comment field.  By default comments in FASTA input are 
+not outputed, nor are the A2M alignments or scores.  If desired use -l.
+"""
+
+from __future__ import division, print_function
+import sys, argparse, re, align, imp
+parse = imp.load_source('parse','../parse.py')
+from datetime import datetime
+
+def main():
+	"""
+	Parses options from the command line.  Creates boht a linear and an affine
+	aligner (with open, extend, and double all set to a fixed gap cost).  Runs 
+	all files given in the command line with both the linear and affine aligner.  
+	Reports the ratio of runtimes to stdout for each sequence (along with the 
+	seqeunce, comments, and scores if specified in options).
+	"""
+
+	options = parse_arguments()
+	subst, alpha = parse.subst(options.subst_matrix)
+
+	linear_aligner = align.local_linear_aligner(subst, gap=options.gap)
+	affine_aligner = align.local_aligner(subst, open=options.gap, 
+			extend=options.gap, double=options.gap)
+
+	for source in options.file_sources:
+		master = None
+		if(options.supress_filename): 
+			print("#Reading from {}, we find".format(source.name))
+		for name, com, seq in parse.fasta(source, alphabet=alpha):
+			if(not master):
+				master = seq
+				if(not options.long_output): com = ''
+				print('>'+name,com, "is the masters sequence of length", 
+						len(master))
+				if(options.long_output): print(seq)
+			else:
+				start = datetime.now()
+				linear_score = linear_aligner.align(master, seq)
+				linear_seq = linear_aligner.traceback_col_seq()
+				stop = datetime.now()
+				linear_time = (stop - start).microseconds
+
+				start = datetime.now()
+				affine_score = affine_aligner.align(master,seq)
+				affine_seq = affine_aligner.traceback_col_seq()
+				stop = datetime.now()
+				affine_time = (stop - start).microseconds
+
+				if(options.long_output):
+					com = ''.join([com,' score_a2m = ', 
+							str(linear_aligner.score_a2m(master,linear_seq)),
+							' align score = ',str(linear_score)])
+				else: com = ''
+
+				print('>'+name,com, "is of length", len(seq),
+					"with an affine/linear runtime ratio of {:.3f}"
+					.format(affine_time/linear_time))
+				if(options.long_output): print(linear_seq)
+		print('')
+
+
+def parse_arguments():
+	""" Parses arguments from the command line """
+
+	parser = argparse.ArgumentParser(description = __doc__)
+
+
+	parser.add_argument('--gap', '-g', type=int, default=3,
+			help = 'Linear gap cost. Default is 3.')
+	parser.add_argument('--long_output', '-l', action='store_true',
+			help='''Outputs comments contained in the orriginal FASTA input, 
+			A2M aligments, and their scores if specified.  Default is False.''')
+	parser.add_argument('--supress_filename', '-f', action='store_false',
+			help='''Prevents filename from being outputed.''')
+	parser.add_argument('--subst_matrix', '-s', type=argparse.FileType('r'),
+			default='BLOSUM62.txt', nargs='?', 
+			help = '''Specifies the file to read the substitution matrix from 
+			(integer values in BLOSUM format). Defaults to 'BLOSUM62.txt'.''')
+	parser.add_argument('file_sources', nargs='*', default=[sys.stdin], 
+		type=argparse.FileType('r'),help='''Specifies any number of file names 
+		for FASTA files for input. If none are provided, reads from stdin.''')
+
+	return parser.parse_args()
+
+if __name__ == "__main__" :
+    sys.exit(main())

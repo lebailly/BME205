@@ -1,0 +1,237 @@
+#!/usr/bin/env python2.7
+
+#File: lebailly/BME205/HW6/reverseORF
+#Author: Chris LeBailly
+
+"""
+reverseORF produces a histogram of the length of the longest ORF found on the
+reverse strand of a gene.  There are two ways a gene can be produced.  If only a 
+codon bias table is provided (--codon), the gene will be produced taking a start 
+codon and adding 559 randomly chosen non-stop codons (weighted by the counts in 
+the codon bias table).  If a protein FASTA file (--protein) is also specified, a 
+series of codons that codes for --protein are chosen, using the codon biases in 
+--codon.  Once the gene is produced the longest ORF in the reverse compliment is
+found and stored.  This is repeated --num_sequences times.  Output is four 
+tab-delimited columns: the length, the number of occurrences of that length as 
+the longest ORF, the probability of that length (the second column divided by 
+the number of samples tried), and the estimated probability of seeing that long 
+an ORF or longer (P-value).
+"""
+
+from __future__ import print_function, division
+import sys, argparse, collections, random, bisect, string, itertools, imp
+parse = imp.load_source('parse','../parse.py')
+
+def main():
+    """
+    Parses command line arguments.  If a protein file is specified, it creates a
+    dictionary of counts, reads in the protein sequence, then generates genes 
+    coded by the protein.  The longest ORF on the reverse compliment is found.
+    Otherwise the random-codon model is used.  The gene is created with codons
+    randomly selected using the codon bias table.  The longest ORF on the reverse 
+    compliment is found.  This is repeated num_sequences number of times.  The 
+    counts are then sorted and outputted.
+    """
+
+    args = parse_arguments()
+
+    length_counts = collections.Counter()
+
+    if(args.protein):
+
+        counts = parse.codon_preference_table_with_AA(args.codon)
+
+        for name, comm, seq in parse.fasta(args.protein): protein_seq = seq
+
+        for orf in gen_orf_from_protein(counts, protein_seq, args.num_sequences):
+            rev_orf_len = find_longest_orf(reverse_comp(orf))
+            length_counts[rev_orf_len] += 1
+
+    else:
+
+        counts = parse.codon_preference_table(args.codon)
+        
+        for orf in gen_orf_ranonmly(counts, args.num_sequences):
+            rev_orf_len = find_longest_orf(reverse_comp(orf))
+            length_counts[rev_orf_len] += 1
+
+    sorted_counts = sorted(length_counts.items())
+
+    output(sorted_counts)
+
+def parse_arguments():
+    """ Parses arguments from the command line"""
+
+    parser = argparse.ArgumentParser(description = __doc__)
+
+    parser.add_argument('--protein', '-p', nargs='?', type=argparse.FileType('r'),
+            default=None,help='''Specifies the file where the protein sequence 
+            for the forward strand (in FASTA format) is contained. If no protein 
+            is specified, the program uses the random-codon model.''')
+    parser.add_argument('--codon', '-c', nargs='?', type=argparse.FileType('r'),
+            required=True,help='''Specifies the file for the codon bias table.
+            The first line of file is ignored (can be used as a header).
+            Remaining lines are either whitespace or whitespace-separated data 
+            with the codon in the second column and the counts in the 
+            third column.''')
+    parser.add_argument('--num_sequences', '-n', type=int, default=10000,
+            help='''The number of sequences generated in the sample 
+            (defaults to 10,000).''')
+
+    return parser.parse_args()
+
+#Modified from  
+#http://eli.thegreenplace.net/2010/01/22/weighted-random-generation-in-python/
+class RandomCodonGenerator(object):
+    """ 
+    RandomCodonGenerator is a weighted random generator.  On construction
+    takes a dictionary with codons as keys and counts as values.  Each 
+    time the RandomCodonGenerator is called, it returns a random codon which
+    is weighted by the counts given in construction.
+    """
+
+    def __init__(self, counts):
+
+        #self.totals[k] = the sum of the first k+1 values in 'counts'.
+        #self.counts_list is a list made from the dictionary to preserve order.
+
+        self.totals = []
+        self.counts_list = counts.items()
+        running_total = 0
+
+        for item in self.counts_list:
+            running_total += item[1]
+            self.totals.append(running_total)
+
+        self.total = self.totals[-1]
+
+    def next(self):
+        """ Returns a random codon """
+
+        rnd = random.randint(0,self.total-1)
+        index = bisect.bisect_right(self.totals, rnd)
+        return self.counts_list[index][0]
+
+    def __call__(self):
+        return self.next()
+
+def gen_orf_ranonmly(counts, num_sequences, orf_length=560):
+    """
+    Pre-condition: 'counts' is a dictionary-type with codons as keys and counts
+    as values.
+
+    Post-condition: Randomly generates 'num_sequences' ORFs of length 
+    'orf_length'. Yields one ORF (as a string) at a time.
+    """
+
+    #rand_codn is a weighted random codon generator (see class documentation).
+    rand_codon = RandomCodonGenerator(counts)
+
+    for i in xrange(num_sequences):
+        list_of_codons = ['ATG']
+
+        while(len(list_of_codons) < orf_length):
+            new_codon = rand_codon()
+            if(new_codon != 'TAG' and new_codon != 'TGA' and new_codon != 'TAA'):
+                list_of_codons.append(new_codon)
+
+        yield ''.join(list_of_codons)
+
+def gen_orf_from_protein(counts, seq, num_sequences):
+    """
+    Pre-condition: 'counts' is a dictionary of dictionaries.  The outer dictionary
+    has keys of amino-acids.  The inner dictionary has keys of codons which are 
+    associated with the outer dictionary's amino-acid.  The values of the inner
+    dictionary are counts.  'seq' is a protein sequence. 'num_sequences' is the
+    number of sequences to be generated.
+
+    Post-condition: Randomly generates a series of codons that codes for 'seq',
+    using the codon biases in 'counts'.  These codons are joined and yielded one
+    at a time, till 'num_sequences' have been produced.
+    """
+
+    rand_codon_dict = {}
+    for AA in counts.keys():
+        rand_codon_dict[AA] = RandomCodonGenerator(counts[AA])
+
+    for i in xrange(num_sequences):
+        list_of_codons = []
+
+        for AA in seq:
+            new_codon = rand_codon_dict[AA]()
+            list_of_codons.append(new_codon)
+
+        yield ''.join(list_of_codons)
+
+#Ian F. gave me the idea to encode the sequence as protein
+def find_longest_orf(seq):
+    """
+    Pre-condition: 'seq' is a string using the alphabet "ACGT"
+    Post-condition: The length of the longest ORF in all reading frames.
+    """
+
+    longest_orf_len = 0
+
+    for frame in xrange(3):
+        protein_seq_list = []
+
+        for index in xrange(frame,len(seq),3):
+            codon = seq[index:index+3]
+            protein_seq_list.append(codon_table.get(codon, ''))
+
+        protein_seq = ''.join(protein_seq_list)
+        
+        for partial_seq in protein_seq.split('*'):
+            orf_list = partial_seq.split('M', 1) #ORF contained in orf_list[1]
+
+            if(len(orf_list) == 2 and len(orf_list[1]) + 1 > longest_orf_len): 
+                longest_orf_len = len(orf_list[1]) + 1
+
+    return longest_orf_len
+
+# define reverse complement
+complement_table = string.maketrans("ACGT", "TGCA")
+def reverse_comp(dna):
+    """
+    Returns a string with the reverse-complement of the DNA string "dna".
+    Assumes that all bases in DNA are canonical (ACGT).
+    To generalize to wildcard bases, complement_table would need
+    to be redefined.
+    """
+
+    return dna[::-1].translate(complement_table)
+
+def output(length_counts):
+    """
+    Pre-condition: length_counts is a list of tuples.  The tuple x in 
+    length_counts has the length as the first entry and counts of that length 
+    as the second entry.
+
+    Post-condition: Output sent to stdout.  Output is four tab-delimited columns: 
+    the length, the number of occurrences of that length as the longest ORF, the 
+    probability of that length, and the estimated probability of seeing that 
+    long an ORF or longer (P-value).
+    """
+
+    cum_prob = 1.0
+    total = sum(x[1] for x in length_counts)
+
+    for length, count in length_counts:
+        prob = count/total
+        print("{}\t{}\t{:.5f}\t{:.5f}".format(length, count, prob, cum_prob))
+        cum_prob -= prob
+
+#Ian F. typed up the codon_table (emailed me to save typing time)
+codon_table = {'TTT':'F','TTC':'F','TTA':'L','TTG':'L','CTT':'L','CTC':'L',
+        'CTA':'L','CTG': 'L', 'ATT':'I','ATC':'I','ATA':'I','ATG':'M','GTT':'V',
+        'GTC':'V','GTA':'V','GTG':'V','TCT': 'S','TCC':'S','TCA':'S','TCG':'S',
+        'CCT':'P','CCC':'P','CCA':'P','CCG':'P','ACT':'T','ACC':'T','ACA':'T',
+        'ACG':'T','GCT':'A','GCC':'A','GCA':'A','GCG':'A','TAT':'Y','TAC':'Y',
+        'TAA':'*','TAG':'*','CAT':'H','CAC':'H','CAA':'Q','CAG':'Q','AAT':'N',
+        'AAC':'N','AAA':'K','AAG':'K','GAT':'D','GAC':'D','GAA':'E','GAG':'E',
+        'TGT':'C','TGC':'C','TGA':'*','TGG':'W','CGT':'R','CGC':'R','CGA':'R',
+        'CGG':'R','AGT':'S','AGC':'S','AGA':'R','AGG':'R','GGT':'G','GGC':'G',
+        'GGA':'G','GGG':'G'}
+
+if __name__ == "__main__" :
+    sys.exit(main())

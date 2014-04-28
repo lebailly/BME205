@@ -1,0 +1,5 @@
+Using pseudocount 1e-10 on order-0 Markov model for alphabet ACDEFGHIKLMNPQRSTVWY
+	Total encoding cost is 2425922.12633 bits for 574051 characters (+2517 sequence ends=576568)
+	bits/sequence = 963.81490915
+	bits/character (not counting ends) = 4.22596968968
+

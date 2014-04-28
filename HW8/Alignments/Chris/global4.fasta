@@ -1,0 +1,4 @@
+>test1 
+CCCCCCCCCCCCCCCADEFGCCCCCCCCCCCCCCCC
+>test2  This input is legal FASTA, but not legal A2M. score_a2m = -57 align score = -57
+eeeeeeeeee---------------ADEFGeeeeeeeeeeeeeeeee----------------

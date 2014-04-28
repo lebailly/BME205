@@ -1,0 +1,266 @@
+#!/usr/bin/env python2.7
+
+#File: lebailly/BME205/HW5/score_palindromes
+#Author: Chris LeBailly
+
+"""
+score_palindromes takes fasta file(s) from the command line (any of which can be 
+gzipped) or uncompressed fasta data from stdin.  It then generates palindromes 
+of length k, where --min_k <= k <= --max_k (or all k-mers if --all specified).  
+It then computes the expected value for each palindrome or k-mer.  This is based
+on the null model that for the k-mer/palindrome W_1W_2...W_N we would expect to 
+see it count[W_1...W_{N-1}]*count[W_2...W_N]/count[W_2...W_{N-1}] times.
+This expected value is compared to the actual count to produce a Z-score (based
+on a Gaussian distribution), which is used to compute the corresponding e-value.  
+If the e-value <= --max_e the k-mer, observed count, expected count, z-score, 
+and e-value are tab-separated and outputted to stdout. Results are sorted by
+length of k-mer, then alphabetically by k-mer.
+"""
+
+from __future__ import print_function, division
+import sys, argparse, string, re, collections, itertools, gzip, imp
+parse = imp.load_source('parse','../parse.py')
+from math import sqrt, erfc
+
+def main():
+	"""
+	Parses options from the command line, computes the k-mers to test (either
+	palindromes or all k-mers), computes the counts of k-mers in source 
+	file(s) (specified in the command line), then add the reverse complements 
+	of the sequence data to the counts, then computes the stats (expected value, 
+	z-scores and e-values), then prints the results to stdout.
+	"""
+
+	options = parse_arguments()
+
+	#'kmers_to_test' is a list of k-mers which we want to test for under- or
+	#over- representation.
+	if(options.all):
+		kmers_to_test = get_kmers(options.min_k, options.max_k)
+	else:	
+		kmers_to_test = get_palindromes(options.min_k,options.max_k)
+
+	#'N' counts the total number of characters in all sequences and all files
+	#'counts' is a collections.Counter with k-mers keys and count values.
+	#get_counts only produces k-mers with min_k-2 <= k <= max_k as this is
+	#all that is needed to compute expected value with this model.
+	counts, N = get_counts(options.file_sources,options.min_k-2, options.max_k)
+
+	#'rev_counts' is a dict containing the reverse complement k-mers 
+	#(from 'counts') as keys with the same count values as the original k-mer.
+	rev_counts = dict( (reverse_comp(dna),cnt) for dna,cnt in counts.items())
+	for dna, cnt in rev_counts.items():
+		counts[dna] += cnt
+	N *= 2
+
+	#'results' - a list of lists where results[i] is of the form
+	#[k-mer, observed count, expected count, z-score, e-value]
+	#len(results) = # of over- or under- represented palindromes/k-mers
+	results = compute_stats(kmers_to_test, counts, N, options.max_e)
+
+	results.sort(key=lambda x: (len(x[0]), x[0]))
+
+	print_results(results = results, file_sources = options.file_sources, 
+			num_kmers = len(kmers_to_test), N = N, min_k = options.min_k, 
+			max_k = options.max_k, max_e = options.max_e)
+
+def parse_arguments():
+	""" Parses arguments from the command line """
+
+	parser = argparse.ArgumentParser(description = __doc__)
+
+	parser.add_argument('--max_e', '-e', type=float, default=0.01,
+		help='''Reports under- and over-represented palindromes 
+		with E-values < max_e''')
+	parser.add_argument('--max_k', '-k', type=int, default = 6,
+		help='''Specifies the maximum size palindrome (or k-mer, if --all 
+			specified) to look for. Defaults to 6.''')
+	parser.add_argument('--min_k', '-m', type=int_ge_3, default = 6,
+		help='''Specifies the minimum size palindrome (or k-mer, if --all 
+			specified) to look for. Must be >= 3. Defaults to 6.''')
+	parser.add_argument('file_sources', nargs='*', default=sys.stdin, 
+		type = filetype,help='''Specifies any number of file names for FASTA 
+		files of genomes, any of which may be gzipped. If none are provided, 
+		reads (uncompressed) input from stdin.''')
+
+	parser.add_argument('--all', '-a', action='store_true',
+		help='''Tests all possible k-mers (min_k <= k <= max_k) if specified 
+		(defaults to DNA palindromes otherwise).''')
+
+	return parser.parse_args()
+
+def get_palindromes(pmin, pmax):
+	""" 
+	Returns a list of all DNA palindromes of length n (pmin <= n <= pmax).
+
+	A DNA palindrome is a sequence x where x == reverse_comp(x).  This definition
+	only allows for sequences of even length (since no character is its own
+	complement).  We define an odd DNA palindrome to be one that is a DNA
+	palindrome expect for the middle letter.
+	"""
+
+	palindromes = []
+
+	for n in range(pmin, pmax+1):
+		if n % 2 == 0:
+			for first_half in get_kmers(n//2, n//2):
+				palindromes.append(first_half + reverse_comp(first_half))
+
+		else:
+			for first_half in get_kmers(n//2, n//2):
+				for y in "ACGT":
+					palindromes.append(first_half +y+ reverse_comp(first_half))
+
+	return palindromes
+
+# define reverse complement
+complement_table = string.maketrans("ACGT", "TGCA")
+def reverse_comp(dna):
+    """
+    Returns a string with the reverse-complement of the DNA string "dna".
+    Assumes that all bases in DNA are canonical (ACGT).
+    To generalize to wildcard bases, complement_table would need
+    to be redefined.
+    """
+
+    return dna[::-1].translate(complement_table)
+
+def get_kmers(kmin, kmax, alpha="ACGT"):
+	"""
+	Generates all possible k-mers (kmin <= k <= kmax) using the alphabet specified
+	by 'alpha' (set to "ACGT" if none specified).
+
+	Returns a list of these k-mers.
+	"""
+
+	kmers = [''.join (letters) for n in range(kmin, kmax+1) 
+							for letters in itertools.product(alpha,repeat=n)]
+
+	return kmers
+
+def get_counts(file_sources, kmin, kmax):
+	""" 
+	Counts number of k-mers (kmin <= k <= kmax) in each fast source in 
+	file_sources, which is a list of file-like objects.
+	
+	Returns a collections.Counter() with keys of k-mers and values of counts
+	and the length of all the sequence data collected as a tuple.
+	"""
+
+    #'counts' has k-mers for keys and counts as values
+    #seqs_len counts the total length of all sequences in 'source'
+	counts = collections.Counter()
+	seqs_len = 0
+
+	for source in file_sources:
+		for fasta_id, comment, seq in parse.fasta(source):
+			seqs_len += len(seq)
+			for kmer_length in range(kmin, kmax+1):
+				for start in range(len(seq)-kmer_length+1):
+					counts[seq[start:start+kmer_length]] += 1
+		source.close()
+
+	return counts, seqs_len
+
+def compute_stats(kmer_list, counts, N, max_e):
+	"""
+	compute_stats computes the e-values for the supplied data.  
+
+	Pre-conditions:
+	'kmer_list' - a list of kmers (for which stats will be produced)
+	'counts' - any dictionary-type with k-mers as keys (min_k - 2 <= k <= max_k,
+	where min_k and max_k are the bounds on the k-mer lengths in 'kmer_list') 
+	and counts as values.
+	'N' - the total length of the sequence(s) read to produce 'counts'.
+	'max_e' - the upper bound on e-values reported.
+
+	Post-conditions:
+	Retunrs a list of lists ('results') where results[i] is of the form
+	[k-mer, observed count, expected count, z-score, e-value]
+	"""
+
+	#results is the list of list described in the docstring.
+	results = []
+
+	#number of tests, used to convert p-value to e-value.
+	n = len(kmer_list)
+
+	for kmer in kmer_list:
+
+		k = len(kmer)
+
+		observed = counts[kmer]
+		expected = counts[kmer[:-1]]*counts[kmer[1:]]/counts[kmer[1:-1]]
+		sigma = sqrt(expected * (1 - expected/(N-k+1)))
+		Z_score = (observed - expected)/sigma
+
+		E_value_under = n*erfc(-Z_score/sqrt(2))/2 #E-value for under-rep
+		E_value_over = n*erfc(Z_score/sqrt(2))/2 #E-value for over-rep
+
+		if(E_value_under <= max_e):
+			results.append([kmer, observed, expected, Z_score, E_value_under])
+		elif(E_value_over <= max_e):
+			results.append([kmer, observed, expected, Z_score, E_value_over])
+
+	return results
+
+def print_results(results, file_sources, num_kmers, N, min_k, max_k, max_e):
+	""" 
+	Pre-conditions:
+	'results' - a list of lists where results[i] is of the form
+	[k-mer, observed count, expected count, z-score, e-value]
+	'file_source' - a list of the file streams used in this analysis.
+	'num_kmers' - the total number of k-mers tested.
+	'N' - the total length of all sequence data analyzed.
+	'min_k' - the length of the smallest k-mer tested.
+	'max_k' - the length of the largest k-mer tested.
+	'max_e' - the upper bound on the E-values displayed.
+
+	Post-conditions:
+	prints a summary of the program results to stdout.
+	'#' is placed in front of lines not containing data.
+	data lines are tab-separated.
+	expected counts and z-scores are rounded to 2 decimal places, e-values to 3.
+	"""
+
+	#ATTEN - SET OUTPUT TO FORMAT WIDTH USING SOMETHING LIKE max(x[i][1] for i in range(3))?
+
+	print("# Reading from {}".format(
+			', '.join([source.filename for source in file_sources])))
+	print("# There are {} palindromes (or k-mers) being considered"
+			.format(num_kmers))
+	print("# and about {} positions where palindromes (or k-mers) could be"
+			.format(N))
+	print("# There are a total of {} under- or over- represented palindromes"
+			.format(len(results)))
+	print("# Reporting palindromes from length {} to {}".format(min_k, max_k))
+	print("# which are under- or over-represented with E_value <= {}"
+			.format(max_e))
+
+	print("# K-mer\tObserved\tExpected\tZ_Score\tE_Value")
+
+	for kmer, observed, expected, Z_score, E_value in results:
+		print("{}\t{}\t\t{:.2f}\t\t{:.2f}\t{:.3e}"
+			.format(kmer, observed, expected, Z_score, E_value))
+
+def int_ge_3(value):
+    """ Argparse function to make sure 'value' is an int and value >= 3 """
+
+    ivalue = int(value)
+    if ivalue < 3: 
+    	raise argparse.ArgumentTypeError(
+            "{} is an invalid minimum k (need min_k >= 3)".format(value))
+    return ivalue
+
+def filetype(filename):
+	"""
+	If given a filename which ends with .gz, gzip is used to open a file stream.  
+	Otherwise it is assumed the file is uncompressed and this stream is opened.  
+	The stream is returned.
+	"""
+
+	return gzip.GzipFile(filename,'r') if filename.endswith(
+			".gz") else open(filename,'r')
+	
+if __name__ == "__main__" :
+    sys.exit(main())

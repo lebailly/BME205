@@ -1,0 +1,84 @@
+#!/usr/bin/env python2.7
+
+#File: lebailly/BME205/HW7/LongORF
+#Author: Chris LeBailly
+
+"""
+LongORF finds the longest orf in each fasta sequence read from stdin.
+Prints the longest ORF to stdout in fasta format.  The frame the longest orf 
+is found in, as well as its lenght, is added to the comment field.
+"""
+
+from __future__ import print_function, division
+import sys, string, imp
+parse = imp.load_source('parse','../parse.py')
+
+def main():
+    """
+    Reads fasta sequences form stdin, finds the longest ORF in each sequence,
+    as well as the frame it occured in.  Prints the name and longest ORF to 
+    stdout (in fasta format) with the Frame of the longest ORF it's length
+    appended to the comment field.
+    """
+
+    for name, comm, seq in parse.fasta(sys.stdin): 
+        ORF, frame = find_longest_orf(seq)
+        print('>{name} {comm} Frame = {frame} Length = {length}\n{orf}'.format(
+            name=name, comm=comm, orf=ORF, frame = frame, length = len(ORF)))
+
+def find_longest_orf(seq):
+    """
+    Pre-condition: 'seq' is a string using the alphabet "ACGT"
+    Post-condition: The longest ORF in all 6 reading frames and 
+    the frame containing this ORF as a tuple.
+    """
+
+    longest_orf = ''
+    frame_of_long_orf = 0
+
+    for direction in [1,-1]:
+        if(direction == -1): seq = reverse_comp(seq)
+
+        for frame in xrange(3):
+            protein_seq_list = []
+
+            for index in xrange(frame,len(seq),3):
+                codon = seq[index:index+3]
+                protein_seq_list.append(codon_table.get(codon,''))
+
+            protein_seq = ''.join(protein_seq_list)
+            
+            for partial_seq in protein_seq.split('*'):
+                orf_list = partial_seq.split('M', 1) #ORF contained in orf_list[1]
+
+                if(len(orf_list) == 2 and len(orf_list[1]) > len(longest_orf)): 
+                    longest_orf = orf_list[1]
+                    frame_of_long_orf = direction*(frame + 1)
+
+    return 'M'+longest_orf, frame_of_long_orf
+
+complement_table = string.maketrans("ACGT", "TGCA")
+def reverse_comp(dna):
+    """
+    Returns a string with the reverse-complement of the DNA string "dna".
+    Assumes that all bases in DNA are canonical (ACGT).
+    To generalize to wildcard bases, complement_table would need
+    to be redefined.
+    """
+
+    return dna[::-1].translate(complement_table)
+
+#Ian Fiddes typed up the codon_table (emailed me to save typing time)
+codon_table = {'TTT':'F','TTC':'F','TTA':'L','TTG':'L','CTT':'L','CTC':'L',
+        'CTA':'L','CTG': 'L', 'ATT':'I','ATC':'I','ATA':'I','ATG':'M','GTT':'V',
+        'GTC':'V','GTA':'V','GTG':'V','TCT': 'S','TCC':'S','TCA':'S','TCG':'S',
+        'CCT':'P','CCC':'P','CCA':'P','CCG':'P','ACT':'T','ACC':'T','ACA':'T',
+        'ACG':'T','GCT':'A','GCC':'A','GCA':'A','GCG':'A','TAT':'Y','TAC':'Y',
+        'TAA':'*','TAG':'*','CAT':'H','CAC':'H','CAA':'Q','CAG':'Q','AAT':'N',
+        'AAC':'N','AAA':'K','AAG':'K','GAT':'D','GAC':'D','GAA':'E','GAG':'E',
+        'TGT':'C','TGC':'C','TGA':'*','TGG':'W','CGT':'R','CGC':'R','CGA':'R',
+        'CGG':'R','AGT':'S','AGC':'S','AGA':'R','AGG':'R','GGT':'G','GGC':'G',
+        'GGA':'G','GGG':'G'}
+
+if __name__ == "__main__" :
+    sys.exit(main())

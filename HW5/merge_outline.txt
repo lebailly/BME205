@@ -1,0 +1,47 @@
+outline of merge
+
+get_palindromes/kmers:
+
+if(wildcard = 'merge_X')
+odd is dna + 'X' + rev_comp(dna)
+
+if(wildcard = 'merge_SW')
+odd is dna + 'S' + rev_comp(dna)
+and dna + 'W' + rev_comp(dna)
+
+********************
+
+merge_counts
+
+odd_kmers = list of odd-len k-mers
+
+for word in odd_kmers:
+	if(wildcard = 'merge_X')
+		merge(word,"ACTG","X", len(word)//2, counts)
+		merge(word[:-1], "ACTG", "X", len(word)//2 + 1, counts) #DOUBLE CHECK INDEX CALUCLATIONS!
+		merge(word[1:], "ACTG", "X", len(word)//2 - 1, counts)
+		merge(word[1:-1], "ACTG", "X", (len(word)-2)//2, counts)
+
+	if(wildcard = 'merge_SW')
+		merge(word,"AT","S", len(word)//2, counts)
+		merge(word[:-1], "AT", "S", len(word)//2 + 1, counts) #DOUBLE CHECK INDEX CALUCLATIONS!
+		merge(word[1:], "AT", "S", len(word)//2 - 1, counts)
+		merge(word[1:-1], "AT", "S", (len(word)-2)//2, counts)
+
+		merge(word, "CG", "W", len(word)//2, counts)
+		merge(word[:-1], "CG", "W", len(word)//2 + 1, counts) #DOUBLE CHECK INDEX CALUCLATIONS!
+		merge(word[1:], "CG", "W", len(word)//2 - 1, counts)
+		merge(word[1:-1], "CG", "W", (len(word)-2)//2, counts)
+
+ADD SUBWORDS TO MERGE
+*********************
+
+merge(word, original, replacement, index, counts)
+
+fist_half = word[:index]
+second_half = word[index+1:]
+
+for letter in original:
+	counts[first_half + replacement + second_half] += counts[first_half + letter + second_half]
+
+return counts ?

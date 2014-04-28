@@ -1,0 +1,128 @@
+#!/usr/bin/env python2.7
+
+#File: lebailly/BME205/HW4/coding-cost
+#Author: Chris LeBailly
+
+"""
+coding-cost computes the coding cost of the inputed file (-f) trained on the 
+whitespace-separated kmer-count pairs in stdin.  Pseudovalue(s) can be specified
+with -p (if none specified defaults to 1) . If multiple values specified only 
+the one with the smallest cost/char printed if -b specified 
+(all printed otherwise).
+"""
+
+from __future__ import division, print_function
+import sys, argparse
+from Markov import *
+
+def main(args):
+    """
+    Parses command line arguments.  Make a counts dictionary (useful when 
+    running multiple pseudovalues) and computes the model order.  Then produces 
+    a dict of dicts containing the k-mer counts plus pseudovalues.  This is then 
+    normalized and converted to log-probabilities.  The coding cost in 
+    options.fasta is then computed.  This is repeated if multiple pseudovalues 
+    are specified.
+
+    Once all computations have completed, the pseudovalue, order, alphabet, 
+    total coding cost, total number of characters, total number of sequences, 
+    cost per sequence, and cost per character are printed to stdout.
+    This is repeated for multiple pseduovalues.
+    """
+
+    #'counts_dict' is a dictionary of counts (k-mer keys, count values).
+    #'cost_list', 'char_list', 'seqs_list', and 'char_cost' lists store the 
+    #results of coding_cost function.  List useful if more than one pseudovalue.
+    #'sorted_results' is a zipped list of the above lists.  Used to sort and find
+    #pseudovalue with smallest cost/char.
+    #'counts_table' is a dict of dicts containing k-mer counts.  Key of outer 
+    #dict is contexts and inner dict keys are letters (values of inner are counts).
+    #'log_probs' has same structure as 'counts_table' but stores log-probabilities.
+
+    options = parse_arguments()
+
+    counts_dict = make_kmer_dict(sys.stdin)
+    order = len(counts_dict.keys()[0]) - 1
+
+    cost_list, chars_list, seqs_list, char_cost = [], [], [], []
+
+    for pseudocount in options.pseudo_value:
+        counts_table = make_counts_table(counts_dict, order, options.alphabet, 
+            options.start_char, options.stop_char, pseudocount)
+        log_probs = compute_log_probs(counts_table)
+        cost, chars, seqs = coding_cost(log_probs, order, options.fasta,
+            options.alphabet, options.start_char, options.stop_char)
+        options.fasta.seek(0)
+
+        char_cost.append(cost/chars)
+        cost_list.append(cost)
+        chars_list.append(chars)
+        seqs_list.append(seqs)
+
+    if(options.best_pseudo == False):
+        for i, pseudocount in enumerate(options.pseudo_value):
+            print_results(options.alphabet, pseudocount, order, cost_list[i], 
+                chars_list[i], seqs_list[i])
+    else:
+        sorted_results = sorted(zip(char_cost, options.pseudo_value, cost_list, 
+            chars_list, seqs_list))
+        print_results(options.alphabet, sorted_results[0][1], order, 
+            sorted_results[0][2], sorted_results[0][3], sorted_results[0][4])
+
+def parse_arguments():
+    """ Parses arguments from command line """
+    
+    parser = argparse.ArgumentParser(description = __doc__)
+
+    #File like objects
+    parser.add_argument('fasta', nargs='?', type=argparse.FileType('r'), 
+        help = "A fasta source file to test") 
+    parser.add_argument('--training', '-t', nargs='?',
+        type=argparse.FileType('r'), default=sys.stdin, const=sys.stdin, 
+        help ="A whitespace separated kmer-count filelike object (defaults to stdin).")
+
+    #Pseudo value arguments
+    parser.add_argument('--pseudo_value', '-p', nargs='+', default=[1], type=positive,
+        help='One or more pseudo value(s) to test.  Defaults to 1 if not specified.')
+    parser.add_argument('--best_pseudo', '-b', action='store_true',
+        help='''Finds the best pseudo value (one which results in the smallest 
+            cost/char). Displays only this result.''')
+    
+
+    #Alphabet information
+    parser.add_argument('--alphabet', '-a', action='store', default=
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ', help='''Specifies string containing desired 
+        alphabet. Defaults to 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.''')
+    parser.add_argument('--start_char', action='store', default='^',
+        help='Specifies start character (defaults to \'^\')')
+    parser.add_argument('--stop_char', action='store', default='$',
+        help='Specifies start character (defaults to \'$\')')
+
+    return parser.parse_args()
+
+def print_results(alphabet, pseudo_value, order, cost, chars, seqs):
+    """ 
+    Prints 'pseudo_value', 'order', 'alphabet', total coding cost ('cost'), total
+    number of characters ('chars'), total number of sequences ('seqs'), cost per 
+    sequence, and cost per character.
+    """
+
+    print("Using pseudocount {} on order-{} Markov model for alphabet {}"
+        .format(pseudo_value, order, alphabet))
+    print("\tTotal encoding cost is {} bits for {} characters (+{} sequence ends={})"
+        .format(cost,chars,seqs,chars+seqs))
+    print("\tbits/sequence = {}".format(cost/seqs))
+    print("\tbits/character (not counting ends) = {}\n".format(cost/chars))
+
+#http://stackoverflow.com/questions/14117415/using-argparse-allow-only-positive-integers/14117567#14117567
+def positive(value):
+    """ Defines positive number type for argparse """
+
+    value = float(value)
+    if value <= 0:
+         raise argparse.ArgumentTypeError(
+            "{} is an invalid positive number".format(value))
+    return value
+
+if __name__ == "__main__" :
+    sys.exit(main(sys.argv))
