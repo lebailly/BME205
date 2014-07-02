@@ -1,13 +1,4 @@
-Scaffolding assignment\
- Due Friday, 2013 Oct 4
------------------------
-
-### UCSC BME 205 Fall 2013\
- Bioinformatics: models and algorithms
-
-(Last Update: 16:22 PDT 24 September 2013 )
-
-* * * * *
+# Scaffolding assignment
 
 ### Purpose
 
@@ -209,5 +200,3 @@ then the "main" function is not automatically called, though all the
 functions in the file are available for use in the importing program.
 We'll look at building modules for importing into other programs in
 later assignments.
-
-### Late added notes
