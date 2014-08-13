@@ -5,6 +5,10 @@ Dynamic Programming Exercises. BME 205 Homework \#7
 
 The version of dynamic programming with affine gap costs that we presented in class used only nearest neighbors, but needed 3 matrices:
 
+<p align="center">
+  <img src="https://github.com/lebailly/BME205/blob/master/HW8/Images/Eq1.png"/>
+</p>
+
 ![Eq1](https://github.com/lebailly/BME205/blob/master/HW8/Images/Eq1.png)
 
 $$
