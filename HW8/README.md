@@ -5,6 +5,8 @@ Dynamic Programming Exercises. BME 205 Homework \#7
 
 The version of dynamic programming with affine gap costs that we presented in class used only nearest neighbors, but needed 3 matrices:
 
+![Eq1](https://github.com/lebailly/BME205/blob/master/HW8/Images/Eq1.png)
+
 $$
 M = \max \left\{ \begin{array}{l} 
 I_{c_{i-1,j-1}} + \text{subst}(A_i,B_j) \\
