@@ -147,7 +147,7 @@ Some important points to note:
     The conversion in the other direction is `ord(c)-33` or `ord(c)-64`.
 
     The usual interpretation of the Phred quality number is as
-    –log~10~(Prob(error)), which really only makes sense for quality
+    $–log_{10}$(Prob(error)), which really only makes sense for quality
     values bigger than 1, since if we know nothing about a base, we have
     about 3/4 chance of being wrong about it. Despite this, most
     programs expect 0 as the quality for unknown bases (though Illumina
