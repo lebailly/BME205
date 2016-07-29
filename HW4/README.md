@@ -31,7 +31,7 @@ at the end of the sequences. This means that the Markov chains will have
 probabilities that add to one over all strings that end with the stop
 character, rather than over strings of a fixed length. For simplicity,
 we'll be using different non-sequence characters to indicate the start
-of a sequence (\^) and end of the sequence(\$). Note that the training
+of a sequence (^) and end of the sequence ($). Note that the training
 and test data files do not have these special characters—the alphabet is
 amino acids (with a possibility of special wild cards 'X', 'B', and
 'Z').
@@ -46,14 +46,14 @@ identically distributed) model, or zero-order Markov model. It assumes
 that each character of the string comes from the same *background*
 distribution P\_0, and the probability of a string is just the product
 of the probabilities of the letters of the string (including the final
-"\$"). To estimate the background distribution, we need counts of all
+"$"). To estimate the background distribution, we need counts of all
 the letters in the training set.
 
 The next simplest model was a Markov chain, in which the probability of
 each character depends only on the preceding character. To estimate the
 conditional probabilities, we'll need the counts for all pairs of
-letters in the training set, including initial pairs (like "\^M") and
-ending pairs (like "K\$").
+letters in the training set, including initial pairs (like "^M") and
+ending pairs (like "K$").
 
 In general, for estimating a k-th order Markov chain, we need counts of
 all (k+1)-mers in the training data.
@@ -86,7 +86,7 @@ process the sequence lines a character at a time, using something like
 generator function in Python to read a fasta file one sequence at a
 time, then extract the kmers from the sequence with something like
 
-        for (fasta_id,comment,seq) in read_sequence(genome):
+    for (fasta_id,comment,seq) in read_sequence(genome):
         for start in range(len(seq)-k):
                 counts[seq[start:start+k]] += 1
 
@@ -99,11 +99,9 @@ students will choose to use it.
 
 The "count-kmers" program must accept two options:
 
- `--order` (or -o) 
-:   that gives the order of the model (hence `--order==0` should count
-    1-mers) and
-`--alphabet` (or -a) 
-:   which specifies which letters of the sequence are to be used (for
+-   `--order` (or -o) that gives the order of the model (hence `--order==0` should count 1-mers)
+
+-   `--alphabet` (or -a) which specifies which letters of the sequence are to be used (for
     example, to count only standard amino acids, use
     `--alphabet ACDEFGHIKLMNPQRSTVWY`). All characters in sequences that
     are not in the alphabet should be ignored. Note: you may want to use
@@ -128,7 +126,7 @@ Here is an example of what you should get when your run your program:
 
     count-kmers -o0 --alphabet=ACDEFGHIKLMNPQRSTVWY < /soe/karplus/.html/bme205/f13/markov_files/Python2_f10_1.seqs 
 
-\$ 2517 A 48441 C 7676 D 34223 E 36355 F 22567 G 45576 H 15831 I 31216 K
+$ 2517 A 48441 C 7676 D 34223 E 36355 F 22567 G 45576 H 15831 I 31216 K
 31943 L 49311 M 13032 N 25218 P 27188 Q 21205 R 27749 S 35801 T 31893 V
 39892 W 8481 Y 20362
 
@@ -168,7 +166,7 @@ For symmetry, report as many stop characters as you report start
 characters (this makes it easier to make "reverse Markov" models that
 model the sequences in reverse order).
 
-    count-kmers -o2 --alphabet=ACDEFGHIKLMNPQRSTVWY < /soe/karplus/.html/bme205/f13/markov_files/tiny.seqs 
+    count-kmers -o2 --alphabet=ACDEFGHIKLMNPQRSTVWY < markov_files/tiny.seqs 
 
 you should get
 
@@ -274,16 +272,16 @@ letters in every observed context will work fine up to about order 2,
 but for higher order Markov chains, you might run into k-mers for which
 even the k-1-mer that is the context has never been seen in the training
 set. (For example, Python2\_f10\_2.seqs has a sequence starting with
-CYC, producing 4-mer \^CYC , but the context \^CY never occurs in
+CYC, producing 4-mer ^CYC , but the context ^CY never occurs in
 Python2\_f10\_1.seqs.)
 
 You can fix this problem by making sure that the log-prob table has keys
 for all k-mers over the alphabet.
 
 One tricky point in the log-prob table: We know that once we get to the
-end of a sequence and have seen the final "\$", then all subsequent
-letters must be "\$", so we do not want P("A\$A") to be non-zero, even
-if we have seen counts for "A\$\$".
+end of a sequence and have seen the final "$", then all subsequent
+letters must be "$", so we do not want P("A$A") to be non-zero, even
+if we have seen counts for "A$$".
 
 Hint: for this assignment, since we are not looking at the encoding cost
 individually for each sequence, but only the total encoding cost, you
@@ -296,31 +294,21 @@ Run coding\_cost on both sets of sequences using both order 0 and order
 1 models. Get the coding costs both for the training set and for the
 test set. For comparison, my code with an autodetected alphabet got
 
-  ---------------------------------------------------------------------------
-  Train
-  Test
-  order 0 bits/char
-  order1 bits/char
-  ------------------ ------------------ ------------------ ------------------
-  Python2\_f10\_1    Python2\_f10\_2    Python2\_f10\_2    Python2\_f10\_1
-  Python2\_f10\_1    Python2\_f10\_1    Python2\_f10\_2    Python2\_f10\_2
-  4.22893            4.22897            4.22678            4.22686
-  4.20759            4.20872            4.20476            4.20601
-  ---------------------------------------------------------------------------
+|     Train     |      Test     | order 0 bits/char | order 1 bits/char |
+|:-------------:|:-------------:|:-----------------:|:-----------------:|
+| Python2_f10_1 | Python2_f10_1 |      4.22893      |      4.20759      |
+| Python2_f10_2 | Python2_f10_1 |      4.22897      |      4.20872      |
+| Python2_f10_2 | Python2_f10_2 |      4.22678      |      4.20476      |
+| Python2_f10_1 | Python2_f10_2 |      4.22686      |      4.20601      |
 
 The table with the constrained alphabet ACDEFGHIKLMNPQRSTVWY is
 
-  ---------------------------------------------------------------------------
-  Train
-  Test
-  order 0 bits/char
-  order1 bits/char
-  ------------------ ------------------ ------------------ ------------------
-  Python2\_f10\_1    Python2\_f10\_2    Python2\_f10\_2    Python2\_f10\_1
-  Python2\_f10\_1    Python2\_f10\_1    Python2\_f10\_2    Python2\_f10\_2
-  4.22796            4.22803            4.22590            4.22597
-  4.20691            4.20802            4.20424            4.20536
-  ---------------------------------------------------------------------------
+|     Train     |      Test     | order 0 bits/char | order 1 bits/char |
+|:-------------:|:-------------:|:-----------------:|:-----------------:|
+| Python2_f10_1 | Python2_f10_1 |      4.22796      |      4.20691      |
+| Python2_f10_2 | Python2_f10_1 |      4.22803      |      4.20802      |
+| Python2_f10_2 | Python2_f10_2 |      4.22590      |      4.20424      |
+| Python2_f10_1 | Python2_f10_2 |      4.22597      |      4.20536      |
 
 Note that a simple uniform model over 20 characters would take 4.32193
 bits/char, and over a 21-letter alphabet (including stop) would take
@@ -328,91 +316,91 @@ bits/char, and over a 21-letter alphabet (including stop) would take
 
 Optional bonus points:
 
-Autodetect the alphabet. That is, set the alphabet to any letters, or
-maybe even any non-whitespace, characters that occur in the sequences.
+-   Autodetect the alphabet. That is, set the alphabet to any letters, or
+    maybe even any non-whitespace, characters that occur in the sequences.
 
-For each of the conditional probability distributions for the possible
-prior states (for first-order, this would be 21 states: start and 20
-amino acids), compute the relative entropy between it and the background
-distribution. Where are the biggest information gains coming from?
+-   For each of the conditional probability distributions for the possible
+    prior states (for first-order, this would be 21 states: start and 20
+    amino acids), compute the relative entropy between it and the background
+    distribution. Where are the biggest information gains coming from?
 
-Test the "reversibility" of an alphabet, by determining the coding cost
-for reversed sequences using the Markov chain. Note that since we
-counted off-the-end characters symmetrically at the beginning and end,
-we can simply create a new reverse\_count object which has the same
-values but with each key reversed (and stop/start codes appropriately
-swapped).
+-   Test the "reversibility" of an alphabet, by determining the coding cost
+    for reversed sequences using the Markov chain. Note that since we
+    counted off-the-end characters symmetrically at the beginning and end,
+    we can simply create a new reverse\_count object which has the same
+    values but with each key reversed (and stop/start codes appropriately
+    swapped).
 
-Have the program automatically run tests of different values of the
-pseudocount, to find out what value works best. This can be as simple as
+-   Have the program automatically run tests of different values of the
+    pseudocount, to find out what value works best. This can be as simple as
 
         for pseudocount in [1e-10, 0.01, 0.1, 0.2, 0.5, 1, 2, 5, 10, 100]:  
 
-or as sophisticated as you want to make it.
+    or as sophisticated as you want to make it.
 
-Try a more sophisticated regularizer than pseudocounts. For example, you
-could use the probabilities from a smaller context. One method I think
-is cool, but have not yet implemented, is to have the pseudocounts for a
-order k+1 model be alpha\*probabilities from an order k model,
-recursively down to pseudocounts of alpha/num\_letters for an order 0
-model.
+-   Try a more sophisticated regularizer than pseudocounts. For example, you
+    could use the probabilities from a smaller context. One method I think
+    is cool, but have not yet implemented, is to have the pseudocounts for a
+    order k+1 model be alpha\*probabilities from an order k model,
+    recursively down to pseudocounts of alpha/num\_letters for an order 0
+    model.
 
-Look at the encoding costs for sequences over other alphabets: I have
-provided a couple of other sets, one using the str2 secondary-structure
-alphabet, and one using the near-backbone-11 burial alphabet:
-[Python2\_f10\_1.str2s](markov_files/Python2_f10_1.str2s)
-[Python2\_f10\_2.str2s](markov_files/Python2_f10_2.str2s)
-[Python2\_f10\_1.near-backbone-11s](markov_files/Python2_f10_1.near-backbone-11s)
-[Python2\_f10\_2.near-backbone-11s](markov_files/Python2_f10_2.near-backbone-11s)
-The str2 alphabet includes the following "normal" characters:
-ABCEGHMPQSTYZ. The character X is also possible (as a wildcard) and I
-(as an alias for H). The near-backbone-11 burial alphabet has letters
-ABCDEFGHIJK.
+-   Look at the encoding costs for sequences over other alphabets: I have
+    provided a couple of other sets, one using the str2 secondary-structure
+    alphabet, and one using the near-backbone-11 burial alphabet:
+    [Python2\_f10\_1.str2s](markov_files/Python2_f10_1.str2s)
+    [Python2\_f10\_2.str2s](markov_files/Python2_f10_2.str2s)
+    [Python2\_f10\_1.near-backbone-11s](markov_files/Python2_f10_1.near-backbone-11s)
+    [Python2\_f10\_2.near-backbone-11s](markov_files/Python2_f10_2.near-backbone-11s)
+    The str2 alphabet includes the following "normal" characters:
+    ABCEGHMPQSTYZ. The character X is also possible (as a wildcard) and I
+    (as an alias for H). The near-backbone-11 burial alphabet has letters
+    ABCDEFGHIJK.
 
-To get even fancier with alphabets, allow the user to specify the
-alphabet by name, and look it up in the
-[/projects/compbio/lib/alphabet/](http://compbio.soe.ucsc.edu/alphabets)
-files we have defined for our various other programs. The ExtAA alphabet
-gives the definition of the amino acids. Note the specification of
-wildcards. Another alphabet we use a lot is the EHL2 alphabet, in
-DSSP.alphabet---note its use of aliases to collapse several different
-letters in a sequence into the same equivalence class.
+-   To get even fancier with alphabets, allow the user to specify the
+    alphabet by name, and look it up in the
+    [/projects/compbio/lib/alphabet/](http://compbio.soe.ucsc.edu/alphabets)
+    files we have defined for our various other programs. The ExtAA alphabet
+    gives the definition of the amino acids. Note the specification of
+    wildcards. Another alphabet we use a lot is the EHL2 alphabet, in
+    DSSP.alphabet---note its use of aliases to collapse several different
+    letters in a sequence into the same equivalence class.
 
-Think about adding options to handle letters that are not the 20
-standard amino acids (wildcards B,Z, and X, and spaces "." and "-"). The
-basic assignment calls for you to ignore any letters or punctuation not
-in the alphabet you specify.
+-   Think about adding options to handle letters that are not the 20
+    standard amino acids (wildcards B,Z, and X, and spaces "." and "-"). The
+    basic assignment calls for you to ignore any letters or punctuation not
+    in the alphabet you specify.
 
--   X is a code for any amino acid
--   B is a code for aspartic acid or asparagine (D or N)
--   Z is a code for glutamic acid or glutamine (E or Q)
--   I have heard that mass spectrometry people sometimes use J for
-    isoleucine or leucine (I or L), since they have identical mass, but
-    I've not seen this in files I've used.
+    -   X is a code for any amino acid
+    -   B is a code for aspartic acid or asparagine (D or N)
+    -   Z is a code for glutamic acid or glutamine (E or Q)
+    -   I have heard that mass spectrometry people sometimes use J for
+        isoleucine or leucine (I or L), since they have identical mass, but
+        I've not seen this in files I've used.
 
-The B and Z codes occur mainly in protein sequences that have been
-determined by old-fashioned chemical methods, not from translating DNA
-sequences.
+    The B and Z codes occur mainly in protein sequences that have been
+    determined by old-fashioned chemical methods, not from translating DNA
+    sequences.
 
-There are several ways to handle wildcards and non-standard amino acid
-letters:
+    There are several ways to handle wildcards and non-standard amino acid
+    letters:
 
-1.  treat them the same as spaces, tabs, ".", and "-". That is ignore
-    them completely on input. This will make one erroneous transition:
-    ABF would look like AF. This is the default behavior that your
-    programs are expected to provide.
-2.  Arbitrarily pick one of the possible amino acids (maybe replace B by
-    D and Z by E).
-3.  Treat the character as a gap in the sequence—handle the subsequences
-    on each side as different sequences. There are two variants of
-    this—one which starts a new sequence after the B like any other
-    sequence (so ABF would have a start-\>F transition) and one that
-    doesn't add the start-\>F transition. Note that adding a start-\>F
-    transition may throw off probabilities for what the first residue of
-    a sequence really is.
+    1.  treat them the same as spaces, tabs, ".", and "-". That is ignore
+        them completely on input. This will make one erroneous transition:
+        ABF would look like AF. This is the default behavior that your
+        programs are expected to provide.
+    2.  Arbitrarily pick one of the possible amino acids (maybe replace B by
+        D and Z by E).
+    3.  Treat the character as a gap in the sequence—handle the subsequences
+        on each side as different sequences. There are two variants of
+        this—one which starts a new sequence after the B like any other
+        sequence (so ABF would have a start-\>F transition) and one that
+        doesn't add the start-\>F transition. Note that adding a start-\>F
+        transition may throw off probabilities for what the first residue of
+        a sequence really is.
 
-There are undoubtedly other methods also. What ever you do **document**
-your choices.
+    There are undoubtedly other methods also. What ever you do **document**
+    your choices.
 
 To turn in
 ----------
@@ -452,7 +440,7 @@ Hints
     derived from lists rather than strings. To get a reversed string for
     kmer, use
 
-            "".join(reversed(kmer))
+        "".join(reversed(kmer))
 
 -   An observation from previous years: A lot of students managed to
     make their programs more complex to write and harder to use by
@@ -460,8 +448,8 @@ Hints
     assignment **requires** that you use stdin and stdout. Also, error
     messages should be printed to stderr (to avoid corrupting the main
     output in stdout).
--   Remember that Markov chains are *conditional* probabilities P(x\_i=s
-    | x\_{i-1}=t), not joint probabilities.
+-   Remember that Markov chains are *conditional* probabilities P(x<sub></sub>=s
+    | x<sub>i-1</sub>=t), not joint probabilities.
 -   Break code into paragraphs, separated by blank lines, and start each
     paragraph with a comment as a topic sentence for the paragraph.
 -   Don't read all the data before processing any. If you want to make a
