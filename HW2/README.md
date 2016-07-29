@@ -40,8 +40,7 @@ There are four pieces of data associated with a sequence in a file:
     stop codons and the special symbol "-" for gaps (which are
     interpreted differently in different programs).
 4.  Sequence of quality information (Q-values), generally integers that
-    are rounded approximations to\
-     –10 log~10~ P(character is wrong)\
+    are rounded approximations to –10 log<sub>10</sub> P(character is wrong)
 
 #### FASTA format
 
@@ -147,7 +146,7 @@ Some important points to note:
     The conversion in the other direction is `ord(c)-33` or `ord(c)-64`.
 
     The usual interpretation of the Phred quality number is as
-    $–log_{10}$(Prob(error)), which really only makes sense for quality
+    –log<sub>10</sub>(Prob(error)), which really only makes sense for quality
     values bigger than 1, since if we know nothing about a base, we have
     about 3/4 chance of being wrong about it. Despite this, most
     programs expect 0 as the quality for unknown bases (though Illumina
@@ -155,9 +154,9 @@ Some important points to note:
     Phred+64, for unknown bases).
 
     Solexa files (Illumina version 1.0) encoded
-    –log~10~(Prob(error)/(1–Prob(error))), which actually makes more
+    –log<sub>10</sub>(Prob(error)/(1–Prob(error))), which actually makes more
     sense than the standard interpretation, but standards prevail over
-    sense, so Illumina version 1.3 onward uses –log~10~(Prob(error)), as
+    sense, so Illumina version 1.3 onward uses –log<sub>10</sub>(Prob(error)), as
     do other sequencing platforms.
 
     Although you can use a dict look-up table to translate FASTQ quality
@@ -174,18 +173,18 @@ Some important points to note:
 Create three generators in a module that you can include from other
 Python programs:
 
-read\_fasta, for yielding sequences from a fasta file passed in as a
-file-like object.
+-   read\_fasta, for yielding sequences from a fasta file passed in as a
+    file-like object.
 
-read\_fastq, for yielding sequences with Phred-score quality values from
-a fastq file passed in as a file-like object.
+-   read\_fastq, for yielding sequences with Phred-score quality values from
+    a fastq file passed in as a file-like object.
 
-read\_fasta\_with\_quality, for yielding sequences with Phred-score
-quality values from a pair of files (one fasta, one similarly formatted
-but with white-space-separated numbers instead of amino acid or nucleic
-acid sequences. It would probably be best if this parser used the
-read\_fasta parser directly, so that bug fixes there would automatically
-propagate.
+-   read\_fasta\_with\_quality, for yielding sequences with Phred-score
+    quality values from a pair of files (one fasta, one similarly formatted
+    but with white-space-separated numbers instead of amino acid or nucleic
+    acid sequences). It would probably be best if this parser used the
+    read\_fasta parser directly, so that bug fixes there would automatically
+    propagate.
 
 The module should be a separate file whose name ends with ".py", so that
 it can be included in your main Python program.
