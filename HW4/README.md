@@ -12,10 +12,7 @@ I have provided two FASTA files:
 [Python2\_f10\_1.seqs](markov_files/Python2_f10_1.seqs) and
 [Python2\_f10\_2.seqs](markov_files/Python2_f10_2.seqs) for training and
 testing the models. You will do 2-fold cross-validation (training on
-each of the sets and testing on the other). These can be accessed on
-School of Engineering machines directly from the directory
-/soe/karplus/.html/bme205/f13/markov\_files/ so that you don't need to
-make your own copies.
+each of the sets and testing on the other).
 
 The combined set was derived from [Dunbrack's culledpdb
 list](http://dunbrack.fccc.edu/PISCES.php) of X-ray structures with
@@ -24,7 +21,7 @@ that no two sequences had more than 90% identity. I used only those
 sequences that were in our t06 template library, which primarily means
 that short sequences were removed. I randomly split the list of chain
 ids into two partitions. For full details on how the set was created,
-see the [Makefile](https://users.soe.ucsc.edu/~karplus/bme205/f13/markov_files/Makefile).
+see the [Makefile](markov_files/Makefile).
 
 We will be modeling the sequences including a special "stop" character
 at the end of the sequences. This means that the Markov chains will have
@@ -39,7 +36,7 @@ amino acids (with a possibility of special wild cards 'X', 'B', and
 It might be a good idea in your code to have separate parameters for
 start and stop characters, and to allow `start=None` to mean that k-mers
 that start before the first character of the sequence are not counted
-(similarly for `stop=None`.
+(similarly for `stop=None`).
 
 The simplest model we discussed in class is the i.i.d. (independent,
 identically distributed) model, or zero-order Markov model. It assumes
@@ -124,7 +121,7 @@ by passing in a list of lines:
 
 Here is an example of what you should get when your run your program:
 
-    count-kmers -o0 --alphabet=ACDEFGHIKLMNPQRSTVWY < /soe/karplus/.html/bme205/f13/markov_files/Python2_f10_1.seqs 
+    count-kmers -o0 --alphabet=ACDEFGHIKLMNPQRSTVWY < markov_files/Python2_f10_1.seqs 
 
 $ 2517 A 48441 C 7676 D 34223 E 36355 F 22567 G 45576 H 15831 I 31216 K
 31943 L 49311 M 13032 N 25218 P 27188 Q 21205 R 27749 S 35801 T 31893 V
@@ -132,7 +129,7 @@ $ 2517 A 48441 C 7676 D 34223 E 36355 F 22567 G 45576 H 15831 I 31216 K
 
 Similarly, when you run
 
-    count-kmers -o1 --alphabet=ACDEFGHIKLMNPQRSTVWY < /soe/karplus/.html/bme205/f13/markov_files/tiny.seqs 
+    count-kmers -o1 --alphabet=ACDEFGHIKLMNPQRSTVWY < markov_files/tiny.seqs 
 
 you should get
 
