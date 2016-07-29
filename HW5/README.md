@@ -31,7 +31,7 @@ reverse-complement palindromes (that is, the word is the same on both
 strands of the DNA—reversing the word and complementing it gives you
 back the word). For example, “TATA” is one of the more important
 palindromic sequences, used to signal start of transcription
-(<http://www.pdb.org/pdb/101/motm.do?momID=67>. It can be written as: T
+(<http://www.pdb.org/pdb/101/motm.do?momID=67>). It can be written as: T
 A A' T', where A' means the reverse complement of A (T), and T' means
 the reverse complement of T (A). Palindromes are common recognition
 sites, because many of the DNA-binding proteins bind as dimers or with
@@ -73,39 +73,48 @@ expected count comes out the same in either model
 To compute the probability that an arbitrary n-mer is the word (W) that
 we are interested in, we will use 3 components: the probability that the
 core (n-2) bases match, and the probabilities of the first and last
-bases given that the core matches.\
- P(W) = P(W~1~ | W~2~...W~n-1~) \* P(W~n~ | W~2~...W~n-1~) \*
-P(W~2~...W~n-1~) .
+bases given that the core matches. <br/>
+
+P(W) = P(W<sub>1</sub> | W<sub>2</sub>...W<sub>n-1</sub>) \* P(W<sub>n</sub> | W<sub>2</sub>...W<sub>n-1</sub>) \* P(W<sub>2</sub>...W<sub>n-1</sub>)
 
 If we check for the palindrome N times (roughly the length of the
 genome), we would expect to see N\*P(W) occurrences of W. We can use
 counts and maximum-likelihood estimates of the probabilities in our null
-model to get an estimation formula:\
- E(C(W)) = C(W~1~...W~n-1~X) \* C(XW~2~...W~n~) / C(XW~2~...W~n-1~X) ,\
- where E(C(W)) is the expected value for the count of the number of
-times W occurs in the genome, and C(W~i~...W~j~) is the actual count of
-the number of times the word W~i~...W~j~ occurs. The 'X' character on
+model to get an estimation formula: <br/>
+
+E(C(W)) = C(W<sub>1</sub>...W<sub>n-1</sub>X) \* C(XW<sub>2</sub>...W<sub>n</sub>) / C(XW<sub>2</sub>...W<sub>n-1</sub>X)
+
+where E(C(W)) is the expected value for the count of the number of
+times W occurs in the genome, and C(W<sub>i</sub>...W<sub>j</sub>) is the actual count of
+the number of times the word W<sub>i</sub>...W<sub>j</sub> occurs. The 'X' character on
 the subwords is intended to represent "any character". We are counting
 the number of words of length n that agree on the first n-1, the second
 n-1, or the middle n-2 positions. In practice, since our genome
-sequences are very long, we can ignore edge effects and just use\
- E(C(W)) = C(W~1~...W~n-1~) \* C(W~2~...W~n~) / C(W~2~...W~n-1~) ,\
- If n=2, we are not counting empty strings on the bottom, but the number
+sequences are very long, we can ignore edge effects and just use <br/>
+
+E(C(W)) = C(W<sub>1</sub>...W<sub>n-1</sub>) \* C(W<sub>2</sub>...W<sub>n</sub>) / C(W<sub>2</sub>...W<sub>n-1</sub>)
+
+If n=2, we are not counting empty strings on the bottom, but the number
 of 2-letter windows in our training data. (Actually, I counted the
 number of letters, which is slightly larger.)
 
 Because our model for the count is the sum of N almost independent
 observations, each with probability P(W), it can be well modeled as a
-binomial distribution, with variance\
-Var(C(W)) = N\* P(W) \* (1-P(W))\
- = E(C(W)) \* (1 - E(C(W))/N) ,\
- and the standard deviation is\
-sigma(W) = sqrt(E(C(W)) \* (1 - E(C(W))/N)) . Note: because E(C(W)) is
-much smaller than N, the variance is approximately the same as the mean.
+binomial distribution, with variance <br/>
 
-We can then compute a Z-score for each of our words:\
-Z(W) = (C(W) – E(C(W))) / sigma(W) . Using a Z-score is quite reasonable
-here, because we are expecting a distribution very close to a normal
+Var(C(W)) = N\* P(W) \* (1-P(W)) = E(C(W)) \* (1 - E(C(W))/N)
+
+and the standard deviation is <br/>
+
+sigma(W) = sqrt(E(C(W)) \* (1 - E(C(W))/N))
+
+Note: because E(C(W)) is much smaller than N, the variance is approximately the same as the mean.
+
+We can then compute a Z-score for each of our words: <br/>
+
+Z(W) = (C(W) – E(C(W))) / sigma(W)
+
+Using a Z-score is quite reasonable here, because we are expecting a distribution very close to a normal
 distribution.
 
 How big a palindrome can we use this method on? As the palindromes get
@@ -138,22 +147,22 @@ write a (recursive) generator function yielding all k-mers over a given
 alphabet for a fixed value of k. I also found the following function
 useful:
 
-        # define reverse complement
-        complement_table = string.maketrans("ACGT", "TGCA")
-        def reverse_comp(dna):
-            """return a string with the reverse-complement of the DNA string "dna".
-            Assumes that all bases in DNA are canonical (ACGT).
-            To generalize to wildcard bases, complement_table would need
-            to be redefined.
-            """
-            return dna[::-1].translate(complement_table)
+    # define reverse complement
+    complement_table = string.maketrans("ACGT", "TGCA")
+    def reverse_comp(dna):
+        """return a string with the reverse-complement of the DNA string "dna".
+        Assumes that all bases in DNA are canonical (ACGT).
+        To generalize to wildcard bases, complement_table would need
+        to be redefined.
+        """
+        return dna[::-1].translate(complement_table)
 
 The definition of DNA palindrome above does not allow odd-length
 palindromes, since the middle letter is never the complement of itself.
 In practice there are often unimportant bases in the middle of a
 matching sequence, so let's add "odd palindromes" that have an extra
 letter in the middle: `dna+'A'+reverse_comp(dna)`,
-`dna+'G'+reverse_comp(dna)`, ...
+`dna+'G'+reverse_comp(dna)`, and so forth ...
 
 Part 2:
 
@@ -161,18 +170,14 @@ Write a program, named score\_palindromes, that reports significantly
 under- or over-represented palindromes. The program should have at least
 the following options:
 
--e or --max\_e=0.1
-:   which specifies the maximum E-value to include in your report. The
-    program should report both under- and over-represented palindromes
-    with E-values ≤ max\_e.
--k or --max\_k==8
-:   which specifies the maximum size palindrome to look for.
--m or --min\_k==2
-:   which specifies the minimum size palindrome to look for.
-filename arguments 
-:   any number of file names for FASTA files of genomes, any of which
-    may be gzipped (indicated by the file name ending with ".gz" If none
-    are provided, read (uncompressed) input from stdin.
+-   `-e` or `--max_e=0.1` which specifies the maximum E-value to include in your report. The
+        program should report both under- and over-represented palindromes
+        with E-values ≤ max\_e.
+-   `-k` or `--max_k==8` which specifies the maximum size palindrome to look for.
+-   `-m` or `--min_k==2` which specifies the minimum size palindrome to look for.
+-   `filename arguments` any number of file names for FASTA files of genomes, any of which
+        may be gzipped (indicated by the file name ending with ".gz"). If none
+        are provided, read (uncompressed) input from stdin.
 
 Your program would then be executed as follows (for example):
 
@@ -181,31 +186,31 @@ Your program would then be executed as follows (for example):
 Note: you can open a gzipped file in python fairly easily using the
 `gzip` module.
 
-        file = gzip.GzipFile(filename,'r') if filename.endswith(".gz") 
-                else open(filename,'r')
+    file = gzip.GzipFile(filename,'r') if filename.endswith(".gz") 
+            else open(filename,'r')
 
 I will provide a few genomes for various prokaryotes as FASTA files
-(actually, as gzipped fasta files).\
-[A.fulgidus.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/A.fulgidus.fa.gz)\
-[A.pernix.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/A.pernix.fa.gz)\
-[H.influenzae.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/H.influenzae.fa.gz)\
-[H.pylori.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/H.pylori.fa.gz)\
-[M.jannaschii.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/M.jannaschii.fa.gz)\
-[M.thermoautotrophicus.fa.gz](htto://www.soe.ucsc.edu/classes/bme205/Fall05/M.thermoautotrophicus.fa.gz)\
-[N.meningitidus.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/N.meningitidus.fa.gz)\
-[P.abyssi.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/P.abyssi.fa.gz)\
-[P.furiosus.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/P.furiosus.fa.gz)\
-[P.horikoshii.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/P.horikoshii.fa.gz)\
-[S.acidocaldarius.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/S.acidocaldarius.fa.gz)\
-[S.solfataricus.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/S.solfataricus.fa.gz)\
-[S.tokadaii.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/S.tokadaii.fa.gz)\
-[V.cholerae.I.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/V.cholerae.I.fa.gz)\
-[V.cholerae.II.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/V.cholerae.II.fa.gz)\
-[V.fischeri.I.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/V.fischeri.I.fa.gz)\
-[V.fischeri.II.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/V.fischeri.II.fa.gz)\
-[V.parahaemolyticus.I.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/V.parahaemolyticus.I.fa.gz)\
-[V.parahaemolyticus.II.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/V.parahaemolyticus.II.fa.gz)\
-[V.vulnificus.I.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/V.vulnificus.I.fa.gz)\
+(actually, as gzipped fasta files).<br/>
+[A.fulgidus.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/A.fulgidus.fa.gz)<br/>
+[A.pernix.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/A.pernix.fa.gz)<br/>
+[H.influenzae.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/H.influenzae.fa.gz)<br/>
+[H.pylori.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/H.pylori.fa.gz)<br/>
+[M.jannaschii.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/M.jannaschii.fa.gz)<br/>
+[M.thermoautotrophicus.fa.gz](htto://www.soe.ucsc.edu/classes/bme205/Fall05/M.thermoautotrophicus.fa.gz)<br/>
+[N.meningitidus.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/N.meningitidus.fa.gz)<br/>
+[P.abyssi.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/P.abyssi.fa.gz)<br/>
+[P.furiosus.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/P.furiosus.fa.gz)<br/>
+[P.horikoshii.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/P.horikoshii.fa.gz)<br/>
+[S.acidocaldarius.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/S.acidocaldarius.fa.gz)<br/>
+[S.solfataricus.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/S.solfataricus.fa.gz)<br/>
+[S.tokadaii.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/S.tokadaii.fa.gz)<br/>
+[V.cholerae.I.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/V.cholerae.I.fa.gz)<br/>
+[V.cholerae.II.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/V.cholerae.II.fa.gz)<br/>
+[V.fischeri.I.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/V.fischeri.I.fa.gz)<br/>
+[V.fischeri.II.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/V.fischeri.II.fa.gz)<br/>
+[V.parahaemolyticus.I.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/V.parahaemolyticus.I.fa.gz)<br/>
+[V.parahaemolyticus.II.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/V.parahaemolyticus.II.fa.gz)<br/>
+[V.vulnificus.I.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/V.vulnificus.I.fa.gz)<br/>
 [V.vulnificus.II.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/V.vulnificus.II.fa.gz)
 
 These genomes are also available directly from
@@ -229,9 +234,9 @@ previous k-mer counting only counted one strand of the DNA. There is no
 need to run though the entire reverse-complement strand, as you can get
 the counts for the opposite strand fairly simply:
 
-        rev_counts = dict( (reverse_comp(dna),cnt) for dna,cnt in counts.items())
-        for dna, cnt in rev_counts.items():
-            counts[dna] += cnt
+    rev_counts = dict( (reverse_comp(dna),cnt) for dna,cnt in counts.items())
+    for dna, cnt in rev_counts.items():
+        counts[dna] += cnt
 
 After you have counted all the k-mers, you can iterate over all the
 palindromes that you generated for part 1 and compare the observed
@@ -247,11 +252,15 @@ includes the erf() and erfc() functions:
 
 Use the erfc function to compute the desired p-value. For example, if
 you have a threshold t, then the probability of getting a z-value larger
-than t is\
- P(z \> t) = erfc(t/sqrt(2))/2\
- and the probability of getting a z-value less than t is\
- P(z \< t) = erfc(-t/sqrt(2))/2\
- After we've computed the z-value for a particular palindrome, we can
+than t is<br/>
+
+P(z \> t) = erfc(t/sqrt(2))/2<br/>
+
+and the probability of getting a z-value less than t is<br/>
+
+P(z \< t) = erfc(-t/sqrt(2))/2<br/>
+
+After we've computed the z-value for a particular palindrome, we can
 compute its p-value (the probability of seeing a z-value more extreme
 than it).
 
