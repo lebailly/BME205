@@ -196,7 +196,7 @@ I will provide a few genomes for various prokaryotes as FASTA files
 [H.influenzae.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/H.influenzae.fa.gz)<br/>
 [H.pylori.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/H.pylori.fa.gz)<br/>
 [M.jannaschii.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/M.jannaschii.fa.gz)<br/>
-[M.thermoautotrophicus.fa.gz](htto://www.soe.ucsc.edu/classes/bme205/Fall05/M.thermoautotrophicus.fa.gz)<br/>
+[M.thermoautotrophicus.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/M.thermoautotrophicus.fa.gz)<br/>
 [N.meningitidus.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/N.meningitidus.fa.gz)<br/>
 [P.abyssi.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/P.abyssi.fa.gz)<br/>
 [P.furiosus.fa.gz](http://www.soe.ucsc.edu/classes/bme205/Fall05/P.furiosus.fa.gz)<br/>
