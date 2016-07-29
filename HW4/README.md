@@ -3,7 +3,7 @@
 This assignment is intended to deepen your understanding of first-order
 Markov chains and of relative entropy. I will provide you with a data
 set consisting of many protein sequences in a FASTA file (see
-[FAST/FASTQ assignment](Parser.html)). You will build stochastic models
+[FAST/FASTQ assignment](https://github.com/lebailly/BME205/tree/master/HW2)). You will build stochastic models
 of these sequences as zero-order and first-order Markov chains, and
 measure the information gain of the first-order model over the
 zero-order model.
@@ -24,7 +24,7 @@ that no two sequences had more than 90% identity. I used only those
 sequences that were in our t06 template library, which primarily means
 that short sequences were removed. I randomly split the list of chain
 ids into two partitions. For full details on how the set was created,
-see the [Makefile](markov_files/Makefile).
+see the [Makefile](https://users.soe.ucsc.edu/~karplus/bme205/f13/markov_files/Makefile).
 
 We will be modeling the sequences including a special "stop" character
 at the end of the sequences. This means that the Markov chains will have
@@ -491,135 +491,3 @@ lines I'll run, since students seem incapable of reading the specs.
 
 I failed to specify that fasta files should be positional arguments for
 coding-cost, so many required a `--in` or`--fasta` argument.
-
-\
-
-* * * * *
-
-+----------------+----------------+----------------+----------------+----------------+
-|   ------------ |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------- ----- |
-| -------------- |
-| -------------- |
-| -----          |
-|   [![baskin-ic |
-| on](/~karplus/ |
-| e2-windows-90x |
-| 90.jpg)](http: |
-| //www.soe.ucsc |
-| .edu/)         |
-|   ------------ |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------- ----- |
-| -------------- |
-| -------------- |
-| -----          |
-|                |
-|   ------------ |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| ------ ------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| --             |
-|   [![sketch of |
-|  Kevin Karplus |
-|  by Abe](/~kar |
-| plus/abe/abe-a |
-| rt/Jul-11/Kevi |
-| n-10-July-2011 |
-| -2in.jpg)](htt |
-| p://users.soe. |
-| ucsc.edu/~karp |
-| lus)           |
-|   ------------ |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| ------ ------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| --             |
-|                |
-|   ------------ |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| ------- ------ |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| ---            |
-|   [![BME-slug- |
-| icon](/~karplu |
-| s/cyberslugs/B |
-| ME-slug-100x10 |
-| 0.jpg)](http:/ |
-| /www.bme.ucsc. |
-| edu/)          |
-|   ------------ |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| ------- ------ |
-| -------------- |
-| -------------- |
-| -------------- |
-| -------------- |
-| ---            |
-|                |
-| [BME 205 home  |
-| page](http://u |
-| sers.soe.ucsc. |
-| edu/~karplus/b |
-| me205/index.ht |
-| ml)            |
-| [UCSC          |
-| Bioinformatics |
-| research](http |
-| ://www.cbse.uc |
-| sc.edu/researc |
-| h/bioinf_compb |
-| io)            |
-+----------------+----------------+----------------+----------------+----------------+
-
-Questions about page content should be directed to [Kevin
-Karplus](http://users.soe.ucsc.edu/~karplus)\
- Biomolecular Engineering\
- University of California, Santa Cruz\
- Santa Cruz, CA 95064\
- USA\
- <karplus@soe.ucsc.edu>\
- 1-831-459-4250\
- 318 Physical Sciences Building
-
-[![Locations of visitors to pages with this footer (started 3 Nov
-2008)](http://www4.clustrmaps.com/stats/maps-no_clusters/www.soe.ucsc.edu-~karplus-thumb.jpg)](http://www4.clustrmaps.com/user/1986d20f)
-
