@@ -90,7 +90,7 @@ applies only to the counts, so the output
 
     alpha   10
     beta    10
-    aaa 3
+    aaa     3
 
 would be a correct output file for a `--descend` option.
 
