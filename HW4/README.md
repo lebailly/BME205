@@ -99,9 +99,9 @@ students will choose to use it.
 
 The "count-kmers" program must accept two options:
 
--   `--order` (or -o) that gives the order of the model (hence `--order==0` should count 1-mers)
+-   `--order` (or `-o`) that gives the order of the model (hence `--order==0` should count 1-mers)
 
--   `--alphabet` (or -a) which specifies which letters of the sequence are to be used (for
+-   `--alphabet` (or `-a`) which specifies which letters of the sequence are to be used (for
     example, to count only standard amino acids, use
     `--alphabet ACDEFGHIKLMNPQRSTVWY`). All characters in sequences that
     are not in the alphabet should be ignored. Note: you may want to use
