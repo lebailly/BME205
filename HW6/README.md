@@ -155,17 +155,14 @@ null hypothesis:
 Write a program named reverseORF that accepts (at least) the following
 options:
 
- --protein filename
-:   Read the protein sequence for the forward strand (in FASTA format)
-    from the specified file (needed for the last model)
- --codon filename
-:   Read the codon bias table from the specified file. (Use a standard
-    format so that you can download tables from the Web.) If a codon
-    table is specified, but no protein is specified, the program should
-    use the random-codon model.
- --num\_sequences number
-:   The default number of sequences generated in the sample should be 10
-    000.
+-   `--protein filename` Read the protein sequence for the forward strand (in FASTA format)
+        from the specified file (needed for the last model)
+-   `--codon filename` Read the codon bias table from the specified file. (Use a standard
+        format so that you can download tables from the Web.) If a codon
+        table is specified, but no protein is specified, the program should
+        use the random-codon model.
+-   `--num_sequences number` The default number of sequences generated in the sample should be 10
+        000.
 
 For each sequence generated, scan the three possible reading frames and
 determine the longest open reading frame (sequence of codons that starts
@@ -198,8 +195,8 @@ Probab. Volume 39, Number 4 (2007), 991–1019.
 doi:[10.1239/aap/1198177236](http://dx.doi.org/10.1239/aap/1198177236)]
 may be helpful to those who want to learn more.
 
-I ran gnuplot from [null.gnuplot](null.gnuplot) with data from
-[hist1](hist1). You should, of course, run with your own data.
+I ran gnuplot from [null.gnuplot](example/null.gnuplot) with data from
+[hist1](example/hist1). You should, of course, run with your own data.
 
 Provide plots (using gnuplot or similar tool) of the histograms for the
 two different null models, using at least 10,000 samples for each null
