@@ -13,18 +13,18 @@ site-directed mutagenesis.
 In a typical application, a segment of a gene is excised with
 restriction enzymes and a synthetic DNA sequence of the same length is
 inserted in its place. Because synthesis and purification of small
-(15–50bp) DNA strands is very cheap (around \$0.20–\$20/base-pair,
+(15–50bp) DNA strands is very cheap (around $0.20–$20/base-pair,
 depending mainly on quantity needed, but also on oligo length,
 purification technique, and corporate markup), cassette mutagenesis is a
 very low-cost way to modify genes, though multiple modifications are
 limited to being close to each other in the sequence.
 
-There is a nice 33-page review article on gene synthesis techniques:\
- [Randall A. Hughes, Aleksandr E. Miklos, Andrew D. Ellington,\
- Chapter twelve—Gene Synthesis: Methods and Applications\
- *Methods in Enzymology*, 498:277-309,
-2011.](http://www.sciencedirect.com/science/article/pii/B9780123851208000127)\
- You don't need the information in it to do this homework, but it is
+There is a nice 33-page review article on gene synthesis techniques: <br/>
+[Randall A. Hughes, Aleksandr E. Miklos, Andrew D. Ellington,<br/>
+Chapter twelve—Gene Synthesis: Methods and Applications<br/>
+*Methods in Enzymology*, 498:277-309, 2011.](http://www.sciencedirect.com/science/article/pii/B9780123851208000127)<br/>
+
+You don't need the information in it to do this homework, but it is
 worth reading if you ever need to think about synthesizing genes.
 
 One of the interesting aspects of DNA synthesis is that you are not
@@ -49,87 +49,27 @@ done with degenerate codons.
 
 To specify the set of bases desired, people use an enhanced alphabet,
 with 15 different letters, representing the 15 non-empty sets of the 4
-bases:\
+bases:<br/>
 
-code
+| code |    stands for    | code |   stands for  |
+|:----:|:----------------:|:----:|:-------------:|
+|   A  |     adenosine    |   M  |  A C (amino)  |
+|   C  |     cytidine     |   S  |  G C (strong) |
+|   G  |      guanine     |   W  |   A T (weak)  |
+|   T  |     thymidine    |   B  |     G T C     |
+|   U  |      uridine     |   D  |     G A T     |
+|   R  |   G A (purine)   |   H  |     A C T     |
+|   Y  | T C (pyrimidine) |   V  |     G C A     |
+|   K  |    G T (keto)    |   N  | A G C T (any) |
 
-stands for
+from <http://blast.ncbi.nlm.nih.gov/blastcgihelp.shtml> <br/>
 
-code
+Thus the DNA sequence ARDCN represents a set of 24 different
+sequences:<br/>
 
-stands for
+A-[A or G]-[A or G or T]-C-[A or G or C or T]<br/>
 
-A
-
-adenosine
-
-M
-
-A C (amino)
-
-C
-
-cytidine
-
-S
-
-G C (strong)
-
-G
-
-guanine
-
-W
-
-A T (weak)
-
-T
-
-thymidine
-
-B
-
-G T C
-
-U
-
-uridine
-
-D
-
-G A T
-
-R
-
-G A (purine)
-
-H
-
-A C T
-
-Y
-
-T C (pyrimidine)
-
-V
-
-G C A
-
-K
-
-G T (keto)
-
-N
-
-A G C T (any)
-
-from <http://blast.ncbi.nlm.nih.gov/blastcgihelp.shtml>
-
-\
- Thus the DNA sequence ARDCN represents a set of 24 different
-sequences:\
- A-[A or G]-[A or G or T]-C-[A or G or C or T] Note that U occurs only
-in RNA and T only in DNA, so there are only 15 different degenerate
+Note that U occurs only in RNA and T only in DNA, so there are only 15 different degenerate
 bases, not 16, as U and T are taken to be synonymous (and the empty set
 is not a possible degenerate base). For this assignment, use the DNA
 letters, not the RNA ones.
@@ -138,8 +78,8 @@ Since the cassette mutagenesis is most often done in protein-coding
 regions of genes, it is convenient to think of the mutations in terms of
 codons in the frame used for translation. With 15 different sets
 possible at each of the three positions of the codon, there are
-15^3^=3375 different degenerate codons that can be expressed, rather
-than the 4^3^=64 standard codons. Each degenerate codon now represents a
+15<sup>3</sup>=3375 different degenerate codons that can be expressed, rather
+than the 4<sup>3</sup>=64 standard codons. Each degenerate codon now represents a
 set of possible DNA sequences, and gets translated to a set of amino
 acids.
 
@@ -149,8 +89,8 @@ single degenerate codon, and the "best" degenerate codon to use for that
 set.
 
 First, it should be obvious that not all sets of amino acids can be
-represented by degenerate codons, as there are 2^20^=1048576 (or
-2^21^=2097152 if we include STOP) such sets, and only 3375 degenerate
+represented by degenerate codons, as there are 2<sup>20</sup>=1048576 (or
+2<sup>21</sup>=2097152 if we include STOP) such sets, and only 3375 degenerate
 codons. Furthermore, several degenerate codons will translate to the
 same set of amino acids (for example, CTT, CTN, YTR all translate to
 just leucine). How many distinct sets of amino acids *can* be
@@ -210,9 +150,9 @@ Let's define "imbalance" as the maximum difference between the number of
 codons for each amino acid represented by the degenerate codon, divided
 by the total number of codons represented. That is, something like this
 
-        def imbalance(dcodon):
-            counts = amino_counts[dcodon].values()
-            return (max(counts) - min(counts))/float(sum(counts))
+    def imbalance(dcodon):
+        counts = amino_counts[dcodon].values()
+        return (max(counts) - min(counts))/float(sum(counts))
 
 For example, "TTN" represents "F" with 2 different codons, and "L" with
 2, for an imbalance of (2-2)/4=0. "YTN" also represents "FL", but "L"
@@ -221,53 +161,53 @@ both represent "MIV", but "RTN" has 3 for I, 4 for V, and 1 for M, for
 an imbalance of 0.375, but "RTR" has 1 for I, 2 for V, and 1 for M, for
 an imbalance of only 0.25.
 
-\(1) Print a table that has one line for each amino-acid set, with 3
-tab-separated fields: the amino-acid set (just the letters in
-alphabetical order, no punctuation), the minimal imbalance, and a
-(degenerate) codon with minimal imbalance. The table should have the
-lines in alphabetical order by amino-acid set. This is the "minimal"
-format.
+1.  Print a table that has one line for each amino-acid set, with 3
+    tab-separated fields: the amino-acid set (just the letters in
+    alphabetical order, no punctuation), the minimal imbalance, and a
+    (degenerate) codon with minimal imbalance. The table should have the
+    lines in alphabetical order by amino-acid set. This is the "minimal"
+    format.
 
-Bonus point: replace the third field by *all* the degenerate codons that
-have minimal imbalance for that set (comma-separated). This is
-"min-codons" format.
+    Bonus point: replace the third field by *all* the degenerate codons that
+    have minimal imbalance for that set (comma-separated). This is
+    "min-codons" format.
 
-We can still do more optimization of the choice of codons, when there
-are multiple degenerate codons with the same imbalance. Normally, when
-we are synthesizing genes, we want each synthesized gene to have a
-reasonably high expression. Although optimizing a gene for maximal
-expression is not trivial, we can do a fairly good approximation by
-looking at the codon frequency in the host organism for the gene (most
-often, *E. coli*). Those codons that occur frequently are usually
-translated faster than less frequent codons, resulting in more protein
-expression per mRNA molecule.
+    We can still do more optimization of the choice of codons, when there
+    are multiple degenerate codons with the same imbalance. Normally, when
+    we are synthesizing genes, we want each synthesized gene to have a
+    reasonably high expression. Although optimizing a gene for maximal
+    expression is not trivial, we can do a fairly good approximation by
+    looking at the codon frequency in the host organism for the gene (most
+    often, *E. coli*). Those codons that occur frequently are usually
+    translated faster than less frequent codons, resulting in more protein
+    expression per mRNA molecule.
 
-For example, if we want a codon for "L" for expression in *E. coli*, we
-might choose CTG, since it is the most commonly used codon for "L" in
-*E. coli* CFT073.
-[<http://www.kazusa.or.jp/codon/cgi-bin/showcodon.cgi?species=199310>].
-For degenerate codons, we can use the average frequency of all codons it
-expands to as a crude measure of codon preference. For example, if we
-want to get "FL", we have many choices with an imbalance of 0, but TTK
-has the largest average frequency (0.0186) and so we would choose it.
-Note, TTW also has an average frequency of 0.0186 but is slightly less
-frequent than TTK, while YTC has only 0.0139, though it still has an
-imbalance of 0.
+    For example, if we want a codon for "L" for expression in *E. coli*, we
+    might choose CTG, since it is the most commonly used codon for "L" in
+    *E. coli* CFT073.
+    [<http://www.kazusa.or.jp/codon/cgi-bin/showcodon.cgi?species=199310>].
+    For degenerate codons, we can use the average frequency of all codons it
+    expands to as a crude measure of codon preference. For example, if we
+    want to get "FL", we have many choices with an imbalance of 0, but TTK
+    has the largest average frequency (0.0186) and so we would choose it.
+    Note, TTW also has an average frequency of 0.0186 but is slightly less
+    frequent than TTK, while YTC has only 0.0139, though it still has an
+    imbalance of 0.
 
-\(2) Modify the program so that the codon selected is the highest
-frequency of the minimal-imbalance codons. This is still the "minimal"
-format. If you did the optional "min-codons" format, sort the codons so
-that the most frequent is first.
+2.  Modify the program so that the codon selected is the highest
+    frequency of the minimal-imbalance codons. This is still the "minimal"
+    format. If you did the optional "min-codons" format, sort the codons so
+    that the most frequent is first.
 
-Bonus point: Modify the table above to print the amino-acid set then a
-list of all codons with their imbalance and frequency, in decreasing
-order of desirability (lower imbalance being more important than higher
-frequency). The lines should look like this:
+    Bonus point: Modify the table above to print the amino-acid set then a
+    list of all codons with their imbalance and frequency, in decreasing
+    order of desirability (lower imbalance being more important than higher
+    frequency). The lines should look like this:
 
-    ACGPRSW ['BSS, 0.08, 0.0159', 'BSK, 0.08, 0.0147', 'BSB, 0.11, 0.0151']
-    ACGRSTW ['DSS, 0.17, 0.0159', 'DSK, 0.17, 0.0130', 'DSB, 0.22, 0.0147']
+        ACGPRSW ['BSS, 0.08, 0.0159', 'BSK, 0.08, 0.0147', 'BSB, 0.11, 0.0151']
+        ACGRSTW ['DSS, 0.17, 0.0159', 'DSK, 0.17, 0.0130', 'DSB, 0.22, 0.0147']
 
-This is the "full" format.
+    This is the "full" format.
 
 Bonus point: provide several different output formats and options to
 choose which one to use.
@@ -303,10 +243,10 @@ must be able to run your program easily and not have to guess what
 options to set. You get no bonus points for options that I can't figure
 out! Ideally, I should be able to run the commands
 
-    degenerate --output_format=full
-    degenerate --output_format=minimal
-    degenerate --output_format=all-codons
-    degenerate --output_format=min-codons
+-   `degenerate --output_format=full`
+-   `degenerate --output_format=minimal`
+-   `degenerate --output_format=all-codons`
+-   `degenerate --output_format=min-codons`
 
 (if you implement all output formats, which is not required) to get
 output to stdout, without having to locate auxiliary files or change
@@ -316,9 +256,9 @@ commands—they just generate output to stdout.
 Other arguments that you could recognize (with reasonable default
 values) include
 
-    --codon 'http://www.kazusa.or.jp/codon/cgi-bin/showcodon.cgi?species=199310' 
-    --code_table=ftp://ftp.ncbi.nih.gov/entrez/misc/data/gc.prt
-    --gene_code=Standard
+-   `--codon 'http://www.kazusa.or.jp/codon/cgi-bin/showcodon.cgi?species=199310'`
+-   `--code_table=ftp://ftp.ncbi.nih.gov/entrez/misc/data/gc.prt`
+-   `--gene_code=Standard`
 
 Note that you can open a URL for reading as easily as opening a file
 with the urllib package.
