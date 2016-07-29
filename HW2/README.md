@@ -40,7 +40,7 @@ There are four pieces of data associated with a sequence in a file:
     stop codons and the special symbol "-" for gaps (which are
     interpreted differently in different programs).
 4.  Sequence of quality information (Q-values), generally integers that
-    are rounded approximations to –10 log<sub>10</sub> P(character is wrong)
+    are rounded approximations to <br/> –10 log<sub>10</sub> P(character is wrong)
 
 #### FASTA format
 
